@@ -1,0 +1,9 @@
+packages:
+  - 'packages/*'
+  # - "apps/*"  # futuro: BFF de referência / playground
+
+overrides:
+  zod: ^3.25.0
+
+onlyBuiltDependencies:
+  - esbuild
