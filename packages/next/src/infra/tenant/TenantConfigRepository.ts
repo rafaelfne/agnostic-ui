@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { injectable } from 'tsyringe';
 import type { TenantConfig } from '@yukilabs/agnostic-ui-core';
 import type { ITenantConfigRepository } from '../../application/ports';
