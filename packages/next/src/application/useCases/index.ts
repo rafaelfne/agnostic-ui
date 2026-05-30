@@ -7,3 +7,6 @@ export * from './GetInvestFlowUseCase';
 export * from './GetInvestReviewUseCase';
 export * from './PostInvestAmountUseCase';
 export * from './PostInvestIntentionUseCase';
+export * from './GetInvestmentsCategoryUseCase';
+export * from './GetInvestmentsProductsUseCase';
+export * from './GetInvestmentsProductsSummaryUseCase';
