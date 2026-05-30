@@ -13,3 +13,6 @@ export * from './GetInvestmentsProductsSummaryUseCase';
 export * from './GetCatalogCategoryUseCase';
 export * from './GetCatalogProductDetailsUseCase';
 export * from './GetCatalogPortfoliosUseCase';
+export * from './GetPortfolioBuilderRiskSelectUseCase';
+export * from './GetPortfolioBuilderPreviewUseCase';
+export * from './PostPortfolioBuilderCreatePortfolioUseCase';
