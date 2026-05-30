@@ -16,3 +16,6 @@ export * from './GetCatalogPortfoliosUseCase';
 export * from './GetPortfolioBuilderRiskSelectUseCase';
 export * from './GetPortfolioBuilderPreviewUseCase';
 export * from './PostPortfolioBuilderCreatePortfolioUseCase';
+export * from './GetPortfolioHeroUseCase';
+export * from './GetConsolidatedCustodyUseCase';
+export * from './GetUserWalletsUseCase';
