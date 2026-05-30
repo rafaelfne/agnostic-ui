@@ -6,3 +6,6 @@ export * from './invest/PostInvestIntentionController';
 export * from './investments/GetInvestmentsCategoryController';
 export * from './investments/GetInvestmentsProductsController';
 export * from './investments/GetInvestmentsProductsSummaryController';
+export * from './catalog/GetCatalogCategoryController';
+export * from './catalog/GetCatalogProductDetailsController';
+export * from './catalog/GetCatalogPortfoliosController';

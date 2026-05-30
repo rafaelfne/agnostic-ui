@@ -10,3 +10,6 @@ export * from './PostInvestIntentionUseCase';
 export * from './GetInvestmentsCategoryUseCase';
 export * from './GetInvestmentsProductsUseCase';
 export * from './GetInvestmentsProductsSummaryUseCase';
+export * from './GetCatalogCategoryUseCase';
+export * from './GetCatalogProductDetailsUseCase';
+export * from './GetCatalogPortfoliosUseCase';
