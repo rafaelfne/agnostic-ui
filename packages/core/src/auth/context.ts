@@ -6,13 +6,14 @@ export type ExecutionMode = 'sandbox' | 'live';
 export interface SandboxExecutionContext {
   mode: 'sandbox';
   tenantId: string;
-  profile: MockProfile;
+  customerId: string;
+  mockProfile: MockProfile;
 }
 
 export interface LiveExecutionContext {
   mode: 'live';
   tenantId: string;
-  subject: string;
+  customerId: string;
 }
 
 export type ExecutionContext = SandboxExecutionContext | LiveExecutionContext;
