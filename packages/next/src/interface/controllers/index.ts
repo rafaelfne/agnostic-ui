@@ -9,3 +9,6 @@ export * from './investments/GetInvestmentsProductsSummaryController';
 export * from './catalog/GetCatalogCategoryController';
 export * from './catalog/GetCatalogProductDetailsController';
 export * from './catalog/GetCatalogPortfoliosController';
+export * from './portfolioBuilder/GetPortfolioBuilderRiskSelectController';
+export * from './portfolioBuilder/GetPortfolioBuilderPreviewController';
+export * from './portfolioBuilder/PostPortfolioBuilderCreatePortfolioController';
