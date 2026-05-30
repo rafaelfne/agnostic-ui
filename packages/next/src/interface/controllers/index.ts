@@ -12,3 +12,6 @@ export * from './catalog/GetCatalogPortfoliosController';
 export * from './portfolioBuilder/GetPortfolioBuilderRiskSelectController';
 export * from './portfolioBuilder/GetPortfolioBuilderPreviewController';
 export * from './portfolioBuilder/PostPortfolioBuilderCreatePortfolioController';
+export * from './portfolioDetails/GetPortfolioHeroController';
+export * from './consolidatedCustody/GetConsolidatedCustodyController';
+export * from './wallets/GetUserWalletsController';
