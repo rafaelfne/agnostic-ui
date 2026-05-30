@@ -2,10 +2,10 @@ import type { MockProfile } from './profile';
 
 /**
  * A sandbox marker is a fake access token of the form
- * `app_sandbox_<tenant>_<profile>`. The tenant segment may contain lowercase
- * letters, digits and underscores; the profile is one of the mock profiles.
+ * `app_sandbox_<tenant>_<profile>`. The tenant segment is 1–32 lowercase
+ * letters, digits and hyphens; the profile is one of the mock profiles.
  */
-export const SANDBOX_MARKER_RE = /^app_sandbox_([a-z0-9_]+)_(happyPath|empty|error|slow)$/;
+export const SANDBOX_MARKER_RE = /^app_sandbox_([a-z0-9-]{1,32})_(happyPath|empty|error|slow)$/;
 
 export interface SandboxMarker {
   tenant: string;

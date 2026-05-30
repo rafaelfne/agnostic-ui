@@ -21,11 +21,22 @@ describe('parseSandboxMarker', () => {
     });
   });
 
-  it('accepts tenant ids with underscores and digits', () => {
-    expect(parseSandboxMarker('app_sandbox_partner_co_2_happyPath')).toEqual({
-      tenant: 'partner_co_2',
+  it('accepts tenant ids with hyphens and digits', () => {
+    expect(parseSandboxMarker('app_sandbox_example-co-2_happyPath')).toEqual({
+      tenant: 'example-co-2',
       profile: 'happyPath',
     });
+  });
+
+  it('rejects an underscore in the tenant', () => {
+    expect(parseSandboxMarker('app_sandbox_partner_co_happyPath')).toBeNull();
+  });
+
+  it('accepts a 32-char tenant but rejects 33', () => {
+    expect(parseSandboxMarker(`app_sandbox_${'a'.repeat(32)}_happyPath`)?.tenant).toBe(
+      'a'.repeat(32),
+    );
+    expect(parseSandboxMarker(`app_sandbox_${'a'.repeat(33)}_happyPath`)).toBeNull();
   });
 
   it('rejects an uppercase tenant', () => {

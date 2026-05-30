@@ -70,7 +70,8 @@ Resolvido **por requisição**, nunca global:
   (dados mock).
 - Caso contrário, JWT → **live** (Core real).
 
-Marker regex: `^app_sandbox_([a-z0-9_]+)_(happyPath|empty|error|slow)$`
+Marker regex: `^app_sandbox_([a-z0-9-]{1,32})_(happyPath|empty|error|slow)$`
+(tenant: 1–32 letras minúsculas, dígitos e hífens — **sem** underscore)
 
 Perfis de mock: `happyPath` (default), `empty`, `error`, `slow`.
 
