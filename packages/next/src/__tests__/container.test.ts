@@ -12,6 +12,7 @@ import {
   EXECUTION_CONTEXT_TOKEN,
   TENANT_ID_TOKEN,
 } from '../infra/di/tokens';
+import { getBalanceMock } from '../infra/gateway/mock/fixtures';
 
 const liveCtx: ExecutionContext = { mode: 'live', tenantId: 'partnerco', customerId: 'cus_123' };
 
@@ -37,9 +38,9 @@ describe('createRequestContainer', () => {
     expect(b.resolve(CUSTOMER_ID_TOKEN)).toBe('cus_b');
   });
 
-  it('binds a placeholder gateway that rejects until F2', async () => {
+  it('binds a working core gateway for the request', async () => {
     const requestContainer = createRequestContainer(liveCtx, 'tok');
     const gateway = requestContainer.resolve(ICORE_GATEWAY_TOKEN);
-    await expect(gateway.getBalance({})).rejects.toThrow(/not implemented until F2/);
+    await expect(gateway.getBalance({})).resolves.toEqual(getBalanceMock());
   });
 });
