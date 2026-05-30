@@ -1,9 +1,9 @@
 name: CI
 
+# CI remoto desligado por enquanto — rode `pnpm ci:local` antes de abrir PR.
+# Mantido como `workflow_dispatch` para reativar via "Run workflow" sem reescrever.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   verify:
