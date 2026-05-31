@@ -19,13 +19,15 @@ export interface ResolvedRequestContext {
  *
  * Returns the resolved context, or a Response (400/401/403) on failure.
  */
-export function resolveRequestContext(request: Request): ResolvedRequestContext | Response {
+export async function resolveRequestContext(
+  request: Request,
+): Promise<ResolvedRequestContext | Response> {
   const accessToken = extractBearerToken(request);
   const requestTenantId = resolveTenant(request);
 
   let ctx: ExecutionContext;
   try {
-    ctx = resolveExecutionMode(accessToken);
+    ctx = await resolveExecutionMode(accessToken);
   } catch (error) {
     if (error instanceof SandboxResolutionError) {
       return errorResponse(error.code);

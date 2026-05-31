@@ -12,7 +12,7 @@ import {
  * the right HTTP status, so there is no business logic here.
  */
 export async function GET(request: Request): Promise<Response> {
-  const resolved = resolveRequestContext(request);
+  const resolved = await resolveRequestContext(request);
   if (resolved instanceof Response) {
     return resolved;
   }
