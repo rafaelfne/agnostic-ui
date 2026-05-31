@@ -2,18 +2,24 @@ import { describe, it, expect } from 'vitest';
 import {
   getTenantConfig,
   hasTenant,
+  listTenants,
   registeredTenantSlugs,
 } from '../infra/tenant/tenantConfigStore';
 
 describe('tenantConfigStore', () => {
-  it('resolves the registered partnerco descriptor', () => {
-    const config = getTenantConfig('partnerco');
-    expect(config?.slug).toBe('partnerco');
-    expect(config?.dataSource).toBe('mock');
+  it('resolves each registered descriptor by slug', () => {
+    expect(getTenantConfig('partnerco')?.dataSource).toBe('mock');
+    expect(getTenantConfig('acme')?.name).toBe('Acme Invest');
+  });
+
+  it('keeps tenant themes distinct (proves descriptor-driven theming)', () => {
+    expect(getTenantConfig('partnerco')?.theme?.primaryColor).toBe('#1A56DB');
+    expect(getTenantConfig('acme')?.theme?.primaryColor).toBe('#0E9F6E');
   });
 
   it('reports known and unknown tenants', () => {
     expect(hasTenant('partnerco')).toBe(true);
+    expect(hasTenant('acme')).toBe(true);
     expect(hasTenant('unknown')).toBe(false);
   });
 
@@ -21,7 +27,8 @@ describe('tenantConfigStore', () => {
     expect(getTenantConfig('unknown')).toBeUndefined();
   });
 
-  it('lists the registered slugs', () => {
-    expect(registeredTenantSlugs()).toContain('partnerco');
+  it('enumerates every registered tenant', () => {
+    expect(listTenants().map((tenant) => tenant.slug)).toEqual(['partnerco', 'acme']);
+    expect(registeredTenantSlugs()).toEqual(['partnerco', 'acme']);
   });
 });
