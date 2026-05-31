@@ -43,6 +43,28 @@ domain  ←  application  ←  infra
 A **regra de dependência** é inviolável: domain não importa nada de fora;
 application só conhece ports; infra implementa ports; interface orquestra.
 
+### Injeção de dependência (DI, no BFF)
+
+Container **tsyringe**: o root registra os singletons de infra (logger, tenant
+repo) + os **use cases e controllers**; cada requisição cria um **child** via
+`createRequestContainer(ctx, accessToken)` com o gateway e o `executionContext`
+da requisição. `child.resolve(TOKEN)` acha o registro subindo até o root mas
+**constrói no child**, então as deps request-scoped resolvem do child.
+
+- **Tokens + registro são gerados** (`src/infra/di/generated/{tokens,registry}.ts`)
+  por `scripts/generate-di.mjs` — **não editar à mão**; alterar o gerador e
+  regenerar. Rode `pnpm --filter @yukilabs/agnostic-ui-next gen:di` ao adicionar
+  um use case ou controller. `gen:di:check` (no `ci:local`) falha em caso de drift.
+- **Convenção:** cada `*UseCase.ts` / `*Controller.ts` exporta uma classe com o
+  nome igual ao stem do arquivo; o token é o nome em SCREAMING_SNAKE + `_TOKEN`
+  (`GetBalanceUseCase` → `GET_BALANCE_USE_CASE_TOKEN`).
+- Controllers injetam o use case **pelo token** e importam a classe como
+  `import type`; rotas resolvem o controller **pelo token**.
+- **Cuidado com ciclo no boot:** controllers importam os tokens leaf
+  (`EXECUTION_CONTEXT_TOKEN`) de `infra/di/tokens`, **não** do barrel `infra` — a
+  fiação no boot cria `container → registry → controllers → barrel infra`, e o
+  barrel ainda não-inicializado faria o `@inject` receber `undefined`.
+
 ### Subsistemas
 
 - **SDUI** — telas como árvore de `TemplateNode` (`type`, `id?`, `props?`,
