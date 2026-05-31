@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
 import { GetCatalogCategoryUseCase } from '../../../application/useCases';
-import { EXECUTION_CONTEXT_TOKEN } from '../../../infra';
+import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import { buildLogContext, internalError, mockGatewayError, validationError } from '../../http';
 import { GetCatalogCategorySchema } from './schemas';
