@@ -1,8 +1,6 @@
 import { createRequestContainer, resolveRequestContext } from '../../../../infra';
-import {
-  PostPortfolioBuilderCreatePortfolioController,
-  internalError,
-} from '../../../../interface';
+import { POST_PORTFOLIO_BUILDER_CREATE_PORTFOLIO_CONTROLLER_TOKEN } from '../../../../infra/di/generated/tokens';
+import { internalError } from '../../../../interface';
 
 /** `POST /api/portfolio-builder/create` (manual, Parte 6.5.2). Canonical handler. */
 export async function POST(request: Request): Promise<Response> {
@@ -13,7 +11,7 @@ export async function POST(request: Request): Promise<Response> {
     }
     const requestContainer = createRequestContainer(resolved.ctx, resolved.accessToken);
     return await requestContainer
-      .resolve(PostPortfolioBuilderCreatePortfolioController)
+      .resolve(POST_PORTFOLIO_BUILDER_CREATE_PORTFOLIO_CONTROLLER_TOKEN)
       .handle(request);
   } catch {
     return internalError();

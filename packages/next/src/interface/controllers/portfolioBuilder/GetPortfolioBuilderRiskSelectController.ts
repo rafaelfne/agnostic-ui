@@ -2,8 +2,9 @@ import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
-import { GetPortfolioBuilderRiskSelectUseCase } from '../../../application/useCases';
+import type { GetPortfolioBuilderRiskSelectUseCase } from '../../../application/useCases';
 import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
+import { GET_PORTFOLIO_BUILDER_RISK_SELECT_USE_CASE_TOKEN } from '../../../infra/di/generated/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import { buildLogContext, internalError, mockGatewayError, validationError } from '../../http';
 import { GetPortfolioBuilderRiskSelectSchema } from './schemas';
@@ -12,7 +13,7 @@ import { GetPortfolioBuilderRiskSelectSchema } from './schemas';
 @injectable()
 export class GetPortfolioBuilderRiskSelectController {
   constructor(
-    @inject(GetPortfolioBuilderRiskSelectUseCase)
+    @inject(GET_PORTFOLIO_BUILDER_RISK_SELECT_USE_CASE_TOKEN)
     private readonly getPortfolioBuilderRiskSelectUseCase: GetPortfolioBuilderRiskSelectUseCase,
     @inject(EXECUTION_CONTEXT_TOKEN) private readonly executionContext: ExecutionContext,
     @inject(ILOGGER_TOKEN) private readonly logger: ILogger,

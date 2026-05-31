@@ -1,5 +1,6 @@
 import { createRequestContainer, resolveRequestContext } from '../../../../infra';
-import { GetPortfolioBuilderRiskSelectController, internalError } from '../../../../interface';
+import { GET_PORTFOLIO_BUILDER_RISK_SELECT_CONTROLLER_TOKEN } from '../../../../infra/di/generated/tokens';
+import { internalError } from '../../../../interface';
 
 /** `GET /api/portfolio-builder/risk-select` (manual, Parte 6.5.2). Canonical handler. */
 export async function GET(request: Request): Promise<Response> {
@@ -9,7 +10,9 @@ export async function GET(request: Request): Promise<Response> {
       return resolved;
     }
     const requestContainer = createRequestContainer(resolved.ctx, resolved.accessToken);
-    return await requestContainer.resolve(GetPortfolioBuilderRiskSelectController).handle(request);
+    return await requestContainer
+      .resolve(GET_PORTFOLIO_BUILDER_RISK_SELECT_CONTROLLER_TOKEN)
+      .handle(request);
   } catch {
     return internalError();
   }

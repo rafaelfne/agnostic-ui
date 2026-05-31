@@ -1,5 +1,6 @@
 import { createRequestContainer, resolveRequestContext } from '../../../../infra';
-import { GetCatalogProductDetailsController, internalError } from '../../../../interface';
+import { GET_CATALOG_PRODUCT_DETAILS_CONTROLLER_TOKEN } from '../../../../infra/di/generated/tokens';
+import { internalError } from '../../../../interface';
 
 /** `GET /api/catalog/product-details` (manual, Parte 6.5.2). Canonical handler. */
 export async function GET(request: Request): Promise<Response> {
@@ -9,7 +10,9 @@ export async function GET(request: Request): Promise<Response> {
       return resolved;
     }
     const requestContainer = createRequestContainer(resolved.ctx, resolved.accessToken);
-    return await requestContainer.resolve(GetCatalogProductDetailsController).handle(request);
+    return await requestContainer
+      .resolve(GET_CATALOG_PRODUCT_DETAILS_CONTROLLER_TOKEN)
+      .handle(request);
   } catch {
     return internalError();
   }

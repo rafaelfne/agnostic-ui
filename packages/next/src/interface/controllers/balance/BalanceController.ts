@@ -2,8 +2,9 @@ import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
-import { GetBalanceUseCase } from '../../../application/useCases';
+import type { GetBalanceUseCase } from '../../../application/useCases';
 import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
+import { GET_BALANCE_USE_CASE_TOKEN } from '../../../infra/di/generated/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import { buildLogContext, internalError, mockGatewayError, validationError } from '../../http';
 import { GetBalanceSchema } from './schemas';
@@ -16,7 +17,7 @@ import { GetBalanceSchema } from './schemas';
 @injectable()
 export class BalanceController {
   constructor(
-    @inject(GetBalanceUseCase) private readonly getBalanceUseCase: GetBalanceUseCase,
+    @inject(GET_BALANCE_USE_CASE_TOKEN) private readonly getBalanceUseCase: GetBalanceUseCase,
     @inject(EXECUTION_CONTEXT_TOKEN) private readonly executionContext: ExecutionContext,
     @inject(ILOGGER_TOKEN) private readonly logger: ILogger,
   ) {}

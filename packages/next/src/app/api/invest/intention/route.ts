@@ -1,5 +1,6 @@
 import { createRequestContainer, resolveRequestContext } from '../../../../infra';
-import { PostInvestIntentionController, internalError } from '../../../../interface';
+import { POST_INVEST_INTENTION_CONTROLLER_TOKEN } from '../../../../infra/di/generated/tokens';
+import { internalError } from '../../../../interface';
 
 /** `POST /api/invest/intention` (manual, Parte 6.5.2). Canonical handler. */
 export async function POST(request: Request): Promise<Response> {
@@ -9,7 +10,7 @@ export async function POST(request: Request): Promise<Response> {
       return resolved;
     }
     const requestContainer = createRequestContainer(resolved.ctx, resolved.accessToken);
-    return await requestContainer.resolve(PostInvestIntentionController).handle(request);
+    return await requestContainer.resolve(POST_INVEST_INTENTION_CONTROLLER_TOKEN).handle(request);
   } catch {
     return internalError();
   }

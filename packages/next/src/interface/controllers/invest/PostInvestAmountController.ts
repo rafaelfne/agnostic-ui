@@ -2,8 +2,9 @@ import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
-import { PostInvestAmountUseCase } from '../../../application/useCases';
+import type { PostInvestAmountUseCase } from '../../../application/useCases';
 import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
+import { POST_INVEST_AMOUNT_USE_CASE_TOKEN } from '../../../infra/di/generated/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import {
   buildLogContext,
@@ -18,7 +19,7 @@ import { PostInvestAmountSchema } from './schemas';
 @injectable()
 export class PostInvestAmountController {
   constructor(
-    @inject(PostInvestAmountUseCase)
+    @inject(POST_INVEST_AMOUNT_USE_CASE_TOKEN)
     private readonly postInvestAmountUseCase: PostInvestAmountUseCase,
     @inject(EXECUTION_CONTEXT_TOKEN) private readonly executionContext: ExecutionContext,
     @inject(ILOGGER_TOKEN) private readonly logger: ILogger,
