@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { getTenantConfig } from '../../../infra/tenant/tenantConfigStore';
 import { tenantRouteParams } from '../../../interface/tenant/tenantRouteParams';
+import { tenantThemeCssVars } from '../../../interface/tenant/tenantThemeVars';
 
 export function generateStaticParams() {
   return tenantRouteParams();
@@ -26,5 +27,9 @@ export default async function TenantSegmentLayout({
   if (!config) {
     notFound();
   }
-  return <div data-tenant={config.slug}>{children}</div>;
+  return (
+    <div data-tenant={config.slug} style={tenantThemeCssVars(config.theme) as CSSProperties}>
+      {children}
+    </div>
+  );
 }
