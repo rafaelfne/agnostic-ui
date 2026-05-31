@@ -2,8 +2,9 @@ import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
-import { GetInvestReviewUseCase } from '../../../application/useCases';
+import type { GetInvestReviewUseCase } from '../../../application/useCases';
 import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
+import { GET_INVEST_REVIEW_USE_CASE_TOKEN } from '../../../infra/di/generated/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import { buildLogContext, internalError, mockGatewayError, validationError } from '../../http';
 import { GetInvestReviewSchema } from './schemas';
@@ -12,7 +13,8 @@ import { GetInvestReviewSchema } from './schemas';
 @injectable()
 export class GetInvestReviewController {
   constructor(
-    @inject(GetInvestReviewUseCase) private readonly getInvestReviewUseCase: GetInvestReviewUseCase,
+    @inject(GET_INVEST_REVIEW_USE_CASE_TOKEN)
+    private readonly getInvestReviewUseCase: GetInvestReviewUseCase,
     @inject(EXECUTION_CONTEXT_TOKEN) private readonly executionContext: ExecutionContext,
     @inject(ILOGGER_TOKEN) private readonly logger: ILogger,
   ) {}

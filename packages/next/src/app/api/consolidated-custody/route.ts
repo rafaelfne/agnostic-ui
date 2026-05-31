@@ -1,5 +1,6 @@
 import { createRequestContainer, resolveRequestContext } from '../../../infra';
-import { GetConsolidatedCustodyController, internalError } from '../../../interface';
+import { GET_CONSOLIDATED_CUSTODY_CONTROLLER_TOKEN } from '../../../infra/di/generated/tokens';
+import { internalError } from '../../../interface';
 
 /** `GET /api/consolidated-custody` (manual, Parte 6.5.2). Canonical handler. */
 export async function GET(request: Request): Promise<Response> {
@@ -9,7 +10,9 @@ export async function GET(request: Request): Promise<Response> {
       return resolved;
     }
     const requestContainer = createRequestContainer(resolved.ctx, resolved.accessToken);
-    return await requestContainer.resolve(GetConsolidatedCustodyController).handle(request);
+    return await requestContainer
+      .resolve(GET_CONSOLIDATED_CUSTODY_CONTROLLER_TOKEN)
+      .handle(request);
   } catch {
     return internalError();
   }

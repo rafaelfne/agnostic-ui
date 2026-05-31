@@ -2,8 +2,9 @@ import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { ILOGGER_TOKEN, type ILogger } from '../../../application/ports';
-import { PostPortfolioBuilderCreatePortfolioUseCase } from '../../../application/useCases';
+import type { PostPortfolioBuilderCreatePortfolioUseCase } from '../../../application/useCases';
 import { EXECUTION_CONTEXT_TOKEN } from '../../../infra/di/tokens';
+import { POST_PORTFOLIO_BUILDER_CREATE_PORTFOLIO_USE_CASE_TOKEN } from '../../../infra/di/generated/tokens';
 import { MockGatewayError } from '../../../infra/gateway/mock';
 import {
   buildLogContext,
@@ -18,7 +19,7 @@ import { PostPortfolioBuilderCreatePortfolioSchema } from './schemas';
 @injectable()
 export class PostPortfolioBuilderCreatePortfolioController {
   constructor(
-    @inject(PostPortfolioBuilderCreatePortfolioUseCase)
+    @inject(POST_PORTFOLIO_BUILDER_CREATE_PORTFOLIO_USE_CASE_TOKEN)
     private readonly postPortfolioBuilderCreatePortfolioUseCase: PostPortfolioBuilderCreatePortfolioUseCase,
     @inject(EXECUTION_CONTEXT_TOKEN) private readonly executionContext: ExecutionContext,
     @inject(ILOGGER_TOKEN) private readonly logger: ILogger,
