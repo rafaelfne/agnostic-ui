@@ -65,6 +65,27 @@ da requisição. `child.resolve(TOKEN)` acha o registro subindo até o root mas
   fiação no boot cria `container → registry → controllers → barrel infra`, e o
   barrel ainda não-inicializado faria o `@inject` receber `undefined`.
 
+### Roteamento e theming por tenant (no BFF)
+
+Cada tenant tem um **segmento de rota próprio** sob o route group organizacional
+`app/(tenants)/[tenant]/` — `(tenants)` **não** aparece na URL, então os paths
+são `/{slug}`, `/{slug}/invest`, etc., espelhando a árvore de telas (home,
+invest, portfolios, portfolio-builder).
+
+- **Fonte config-backed:** os descritores vivem em `src/infra/tenant/tenants/*.ts`
+  e são agregados em `tenantDescriptors`; registrar um tenant = **adicionar um
+  módulo**, sem editar o store nem a DI. `listTenants()` alimenta o
+  `generateStaticParams` do segmento `[tenant]`.
+- **Layout server-side:** `app/(tenants)/[tenant]/layout.tsx` resolve o descritor
+  por slug via `getTenantConfig` e dá `notFound()` (404) em tenant desconhecido
+  antes de qualquer tela renderizar.
+- **Theming server-side:** `tenantThemeCssVars` mapeia o `theme` para as CSS vars
+  do manual (`--tenant-primary` + `-rgb`, `--tenant-secondary`, `--tenant-canvas`,
+  `--tenant-logo-url`) e o layout as injeta como custom properties inline — saem
+  no **HTML do SSR**, sem JS no cliente.
+- **Adiado para o pacote `react` (Fase 2):** o provider de tema client
+  (`useLayoutEffect` no `:root`), o renderer SDUI e a app bar interativa.
+
 ### Subsistemas
 
 - **SDUI** — telas como árvore de `TemplateNode` (`type`, `id?`, `props?`,
@@ -81,8 +102,9 @@ da requisição. `child.resolve(TOKEN)` acha o registro subindo até o root mas
 - **Sandbox** — modo de onboarding sem credenciais reais, decidido **por
   requisição** pelo formato do token.
 - **Multi-tenancy** — descritor declarativo do tenant (`id`/`name`/`slug`/
-  `dataSource`/`theme`/`layout`/`security`/`features`/`version`); tema aplicado
-  por CSS vars em `:root`.
+  `dataSource`/`theme`/`layout`/`security`/`features`/`version`); segmentos de
+  rota e tema por tenant aplicados **server-side** no BFF (ver acima), com o
+  provider de tema client adiado para a Fase 2.
 
 ### Modo de execução (sandbox vs live)
 
