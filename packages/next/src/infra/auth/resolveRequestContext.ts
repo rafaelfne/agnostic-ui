@@ -3,6 +3,7 @@ import { extractBearerToken } from './extractBearerToken';
 import { resolveTenant } from './resolveTenant';
 import { resolveExecutionMode } from './resolveExecutionMode';
 import { SandboxResolutionError, errorResponse } from './httpError';
+import { enforceRateLimit } from './rateLimit';
 
 export interface ResolvedRequestContext {
   ctx: ExecutionContext;
@@ -15,9 +16,11 @@ export interface ResolvedRequestContext {
  * bearer token, read the requested tenant, and resolve the execution mode —
  * then applies the sandbox-only cross-check (marker tenant must equal the
  * `x-tenant-id` header, otherwise `tenant_mismatch` 403). In live mode the JWT
- * is the source of truth and there is no cross-check.
+ * is the source of truth and there is no cross-check. Finally, once the subject
+ * is known, the per-subject rate limit is enforced (429 when exceeded; a no-op
+ * when Upstash is unconfigured).
  *
- * Returns the resolved context, or a Response (400/401/403) on failure.
+ * Returns the resolved context, or a Response (400/401/403/429) on failure.
  */
 export async function resolveRequestContext(
   request: Request,
@@ -37,6 +40,11 @@ export async function resolveRequestContext(
 
   if (ctx.mode === 'sandbox' && ctx.tenantId !== requestTenantId) {
     return errorResponse('tenant_mismatch');
+  }
+
+  const limited = await enforceRateLimit(request, ctx);
+  if (limited) {
+    return limited;
   }
 
   return { ctx, accessToken, requestTenantId };
