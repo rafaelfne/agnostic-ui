@@ -1,17 +1,34 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { SignJWT } from 'jose';
 import { GET } from '../app/api/balance/route';
 import { getBalanceMock, getBalanceMockEmpty } from '../infra/gateway/mock/fixtures';
+
+const SECRET = 'test-secret-please-change-0123456789';
+const secretKey = new TextEncoder().encode(SECRET);
 
 function request(headers: Record<string, string>): Request {
   return new Request('https://bff.test/api/balance', { headers });
 }
 
-function jwt(payload: Record<string, unknown>): string {
-  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.signature`;
+function signHs256(payload: Record<string, unknown>): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(secretKey);
 }
 
 describe('GET /api/balance', () => {
+  beforeEach(() => {
+    process.env.JWT_HS256_SECRET = SECRET;
+    delete process.env.JWT_JWKS_URL;
+  });
+  afterEach(() => {
+    delete process.env.JWT_HS256_SECRET;
+    delete process.env.JWT_JWKS_URL;
+  });
+
   it('resolves the controller from the request container and returns 200 happyPath', async () => {
     const response = await GET(
       request({
@@ -66,10 +83,10 @@ describe('GET /api/balance', () => {
     expect(response.status).toBe(400);
   });
 
-  it('passes through 401 for a JWT without sub', async () => {
+  it('passes through 401 for a verified JWT without sub', async () => {
     const response = await GET(
       request({
-        authorization: `Bearer ${jwt({ tenant: 'partnerco' })}`,
+        authorization: `Bearer ${await signHs256({ tenant: 'partnerco' })}`,
         'x-tenant-id': 'partnerco',
       }),
     );

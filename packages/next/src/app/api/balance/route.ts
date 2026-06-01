@@ -9,7 +9,7 @@ import { internalError } from '../../../interface';
  */
 export async function GET(request: Request): Promise<Response> {
   try {
-    const resolved = resolveRequestContext(request);
+    const resolved = await resolveRequestContext(request);
     if (resolved instanceof Response) {
       return resolved;
     }

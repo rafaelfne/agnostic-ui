@@ -1,10 +1,7 @@
-import {
-  decodeJwtPayload,
-  parseSandboxMarker,
-  type ExecutionContext,
-} from '@yukilabs/agnostic-ui-core';
+import { parseSandboxMarker, type ExecutionContext } from '@yukilabs/agnostic-ui-core';
 import { assertTenantExists } from './assertTenantExists';
 import { SandboxResolutionError } from './httpError';
+import { verifyJwt } from './verifyJwt';
 
 const SANDBOX_MARKER_PREFIX = 'app_sandbox_';
 
@@ -16,12 +13,14 @@ const SANDBOX_MARKER_PREFIX = 'app_sandbox_';
  *    format is `invalid_sandbox_marker` (400) and an unregistered tenant is
  *    `unknown_tenant` (400). The customerId is synthesised as
  *    `cus_test_<profile>_<tenant>`.
- *  - Anything else is treated as a live JWT: it must base64url-decode
- *    (`invalid_jwt`, 401) and carry a `sub` claim (`missing_subject`, 401).
+ *  - Anything else is treated as a live JWT: its signature is verified
+ *    (`verifyJwt`, F6 hardening) — a bad/expired/unsigned token or a missing
+ *    key is `invalid_jwt` (401) — and it must carry a `sub` claim
+ *    (`missing_subject`, 401).
  *
- * No signature verification happens here — that is BFF hardening (F6).
+ * Async because signature verification (`jose`) is async.
  */
-export function resolveExecutionMode(token: string): ExecutionContext {
+export async function resolveExecutionMode(token: string): Promise<ExecutionContext> {
   if (token.startsWith(SANDBOX_MARKER_PREFIX)) {
     const parsed = parseSandboxMarker(token);
     if (!parsed) {
@@ -36,8 +35,10 @@ export function resolveExecutionMode(token: string): ExecutionContext {
     };
   }
 
-  const claims = decodeJwtPayload(token);
-  if (claims === null) {
+  let claims;
+  try {
+    claims = await verifyJwt(token);
+  } catch {
     throw new SandboxResolutionError('invalid_jwt');
   }
   if (!claims.sub) {

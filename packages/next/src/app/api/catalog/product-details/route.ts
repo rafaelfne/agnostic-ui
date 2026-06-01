@@ -5,7 +5,7 @@ import { internalError } from '../../../../interface';
 /** `GET /api/catalog/product-details` (manual, Parte 6.5.2). Canonical handler. */
 export async function GET(request: Request): Promise<Response> {
   try {
-    const resolved = resolveRequestContext(request);
+    const resolved = await resolveRequestContext(request);
     if (resolved instanceof Response) {
       return resolved;
     }
