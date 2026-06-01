@@ -131,9 +131,15 @@ Mapeamento de erro → HTTP:
 | `missing_subject`        | 401  |
 | `invalid_jwt`            | 401  |
 | `tenant_mismatch`        | 403  |
+| `rate_limited`           | 429  |
 
-> O `core` **decodifica** o JWT (base64url) mas **não verifica assinatura** —
-> verificação e rate-limit são hardening do BFF (fases posteriores).
+> O `core` **decodifica** o JWT (base64url) mas **não verifica assinatura**. A
+> verificação de assinatura (jose, **fail-closed**) e o rate-limit por subject
+> (Upstash, **fail-open** → 429) são hardening do **BFF** — ver
+> [ADR 0001](docs/adr/0001-bff-hardening-jwt-rate-limit.md). Variáveis: chave do
+> JWT (`JWT_JWKS_URL` **ou** `JWT_HS256_SECRET`, obrigatória em produção live) e
+> Upstash opcional (`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`,
+> `RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW_MS`).
 
 ## Monorepo
 
