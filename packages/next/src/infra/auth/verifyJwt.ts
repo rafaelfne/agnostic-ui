@@ -22,10 +22,7 @@ export class JwtVerificationError extends Error {
   }
 }
 
-export type JwtKeyConfig =
-  | { kind: 'jwks'; url: string }
-  | { kind: 'hs256'; secret: string }
-  | null;
+export type JwtKeyConfig = { kind: 'jwks'; url: string } | { kind: 'hs256'; secret: string } | null;
 
 /** Just the env keys this reads — narrow enough for tests to pass a plain object. */
 export interface JwtKeyEnv {

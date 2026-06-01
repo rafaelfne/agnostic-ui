@@ -69,9 +69,9 @@ describe('resolveExecutionMode', () => {
     });
 
     it('rejects an uppercase tenant as invalid_sandbox_marker', async () => {
-      expect((await caught(() => resolveExecutionMode('app_sandbox_PartnerCo_happyPath'))).code).toBe(
-        'invalid_sandbox_marker',
-      );
+      expect(
+        (await caught(() => resolveExecutionMode('app_sandbox_PartnerCo_happyPath'))).code,
+      ).toBe('invalid_sandbox_marker');
     });
 
     it('rejects an unregistered tenant as unknown_tenant', async () => {

@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { SignJWT } from 'jose';
-import {
-  verifyJwt,
-  resolveVerificationKey,
-  JwtVerificationError,
-} from '../infra/auth/verifyJwt';
+import { verifyJwt, resolveVerificationKey, JwtVerificationError } from '../infra/auth/verifyJwt';
 
 const SECRET = 'unit-test-secret-please-change-0123456789';
 const secretKey = new TextEncoder().encode(SECRET);
