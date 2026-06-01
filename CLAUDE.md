@@ -43,6 +43,49 @@ domain  ←  application  ←  infra
 A **regra de dependência** é inviolável: domain não importa nada de fora;
 application só conhece ports; infra implementa ports; interface orquestra.
 
+### Injeção de dependência (DI, no BFF)
+
+Container **tsyringe**: o root registra os singletons de infra (logger, tenant
+repo) + os **use cases e controllers**; cada requisição cria um **child** via
+`createRequestContainer(ctx, accessToken)` com o gateway e o `executionContext`
+da requisição. `child.resolve(TOKEN)` acha o registro subindo até o root mas
+**constrói no child**, então as deps request-scoped resolvem do child.
+
+- **Tokens + registro são gerados** (`src/infra/di/generated/{tokens,registry}.ts`)
+  por `scripts/generate-di.mjs` — **não editar à mão**; alterar o gerador e
+  regenerar. Rode `pnpm --filter @yukilabs/agnostic-ui-next gen:di` ao adicionar
+  um use case ou controller. `gen:di:check` (no `ci:local`) falha em caso de drift.
+- **Convenção:** cada `*UseCase.ts` / `*Controller.ts` exporta uma classe com o
+  nome igual ao stem do arquivo; o token é o nome em SCREAMING_SNAKE + `_TOKEN`
+  (`GetBalanceUseCase` → `GET_BALANCE_USE_CASE_TOKEN`).
+- Controllers injetam o use case **pelo token** e importam a classe como
+  `import type`; rotas resolvem o controller **pelo token**.
+- **Cuidado com ciclo no boot:** controllers importam os tokens leaf
+  (`EXECUTION_CONTEXT_TOKEN`) de `infra/di/tokens`, **não** do barrel `infra` — a
+  fiação no boot cria `container → registry → controllers → barrel infra`, e o
+  barrel ainda não-inicializado faria o `@inject` receber `undefined`.
+
+### Roteamento e theming por tenant (no BFF)
+
+Cada tenant tem um **segmento de rota próprio** sob o route group organizacional
+`app/(tenants)/[tenant]/` — `(tenants)` **não** aparece na URL, então os paths
+são `/{slug}`, `/{slug}/invest`, etc., espelhando a árvore de telas (home,
+invest, portfolios, portfolio-builder).
+
+- **Fonte config-backed:** os descritores vivem em `src/infra/tenant/tenants/*.ts`
+  e são agregados em `tenantDescriptors`; registrar um tenant = **adicionar um
+  módulo**, sem editar o store nem a DI. `listTenants()` alimenta o
+  `generateStaticParams` do segmento `[tenant]`.
+- **Layout server-side:** `app/(tenants)/[tenant]/layout.tsx` resolve o descritor
+  por slug via `getTenantConfig` e dá `notFound()` (404) em tenant desconhecido
+  antes de qualquer tela renderizar.
+- **Theming server-side:** `tenantThemeCssVars` mapeia o `theme` para as CSS vars
+  do manual (`--tenant-primary` + `-rgb`, `--tenant-secondary`, `--tenant-canvas`,
+  `--tenant-logo-url`) e o layout as injeta como custom properties inline — saem
+  no **HTML do SSR**, sem JS no cliente.
+- **Adiado para o pacote `react` (Fase 2):** o provider de tema client
+  (`useLayoutEffect` no `:root`), o renderer SDUI e a app bar interativa.
+
 ### Subsistemas
 
 - **SDUI** — telas como árvore de `TemplateNode` (`type`, `id?`, `props?`,
@@ -59,8 +102,9 @@ application só conhece ports; infra implementa ports; interface orquestra.
 - **Sandbox** — modo de onboarding sem credenciais reais, decidido **por
   requisição** pelo formato do token.
 - **Multi-tenancy** — descritor declarativo do tenant (`id`/`name`/`slug`/
-  `dataSource`/`theme`/`layout`/`security`/`features`/`version`); tema aplicado
-  por CSS vars em `:root`.
+  `dataSource`/`theme`/`layout`/`security`/`features`/`version`); segmentos de
+  rota e tema por tenant aplicados **server-side** no BFF (ver acima), com o
+  provider de tema client adiado para a Fase 2.
 
 ### Modo de execução (sandbox vs live)
 
@@ -87,9 +131,15 @@ Mapeamento de erro → HTTP:
 | `missing_subject`        | 401  |
 | `invalid_jwt`            | 401  |
 | `tenant_mismatch`        | 403  |
+| `rate_limited`           | 429  |
 
-> O `core` **decodifica** o JWT (base64url) mas **não verifica assinatura** —
-> verificação e rate-limit são hardening do BFF (fases posteriores).
+> O `core` **decodifica** o JWT (base64url) mas **não verifica assinatura**. A
+> verificação de assinatura (jose, **fail-closed**) e o rate-limit por subject
+> (Upstash, **fail-open** → 429) são hardening do **BFF** — ver
+> [ADR 0001](docs/adr/0001-bff-hardening-jwt-rate-limit.md). Variáveis: chave do
+> JWT (`JWT_JWKS_URL` **ou** `JWT_HS256_SECRET`, obrigatória em produção live) e
+> Upstash opcional (`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`,
+> `RATE_LIMIT_MAX`/`RATE_LIMIT_WINDOW_MS`).
 
 ## Monorepo
 

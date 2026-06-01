@@ -1,0 +1,21 @@
+/**
+ * Use cases (manual, Parte 2.3.2): one injectable class per business operation,
+ * each a thin proxy over `ICoreGateway`. Grows one slice per F3 sub-issue.
+ */
+export * from './GetBalanceUseCase';
+export * from './GetInvestFlowUseCase';
+export * from './GetInvestReviewUseCase';
+export * from './PostInvestAmountUseCase';
+export * from './PostInvestIntentionUseCase';
+export * from './GetInvestmentsCategoryUseCase';
+export * from './GetInvestmentsProductsUseCase';
+export * from './GetInvestmentsProductsSummaryUseCase';
+export * from './GetCatalogCategoryUseCase';
+export * from './GetCatalogProductDetailsUseCase';
+export * from './GetCatalogPortfoliosUseCase';
+export * from './GetPortfolioBuilderRiskSelectUseCase';
+export * from './GetPortfolioBuilderPreviewUseCase';
+export * from './PostPortfolioBuilderCreatePortfolioUseCase';
+export * from './GetPortfolioHeroUseCase';
+export * from './GetConsolidatedCustodyUseCase';
+export * from './GetUserWalletsUseCase';

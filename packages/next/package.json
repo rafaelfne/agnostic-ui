@@ -1,0 +1,36 @@
+{
+  "name": "@yukilabs/agnostic-ui-next",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Backend-for-Frontend for Agnostic UI: tenant resolution, sandbox/live execution, SDUI and bridge contract.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "gen:di": "node scripts/generate-di.mjs",
+    "gen:di:check": "node scripts/generate-di.mjs --check"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0",
+    "@yukilabs/agnostic-ui-core": "workspace:*",
+    "jose": "^6.2.3",
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "reflect-metadata": "^0.2.2",
+    "tsyringe": "^4.10.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  }
+}
