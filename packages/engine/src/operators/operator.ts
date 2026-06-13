@@ -1,10 +1,14 @@
 import type { MockProfile } from '@yukilabs/agnostic-ui-core';
+import type { z } from 'zod';
 
 import type { FlowContext } from '../context';
 import type { IEventBus } from '../events';
 import type { ExpressionEvaluator } from '../expression';
 import type { IIntegrationRunner } from '../ports';
 import type { StepDef } from '../schemas';
+
+/** Resolves a `SchemaRef` to a Zod schema. The host owns the named schemas. */
+export type SchemaResolver = (ref: string) => z.ZodTypeAny | undefined;
 
 /** Everything an operator needs that is not the step itself. Injected by the interpreter. */
 export interface EngineServices {
@@ -13,6 +17,8 @@ export interface EngineServices {
   evaluate: ExpressionEvaluator;
   /** Runs a list of steps against the same context (used by `branch`). */
   runSteps: (steps: StepDef[], ctx: FlowContext) => Promise<void>;
+  /** Resolves named schemas for the `validate` operator (optional). */
+  schemas?: SchemaResolver;
 }
 
 export interface OperatorContext {

@@ -12,6 +12,7 @@ import {
   type EngineServices,
   type OperatorContext,
   type OperatorRegistry,
+  type SchemaResolver,
   buildDefaultRegistry,
 } from '../operators';
 import type { IIntegrationRunner } from '../ports';
@@ -28,6 +29,8 @@ export interface RunFlowDeps {
   integrationRunner: IIntegrationRunner;
   /** Optional external bus; emitted events are always returned in the result too. */
   eventBus?: IEventBus;
+  /** Resolves named schemas for `validate` steps that reference one. */
+  schemas?: SchemaResolver;
 }
 
 /** Validates the flow config up front; a bad artifact is a `config` error, not a crash. */
@@ -107,6 +110,7 @@ export async function runFlow(
       eventBus,
       evaluate: evaluateExpression,
       runSteps,
+      schemas: deps.schemas,
     };
 
     await runSteps(parsed.steps, ctx);
