@@ -187,8 +187,11 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   fallback ao registry in-code) em `/api/engine/[flow]`, fechando o loop
   builder→store→runtime. **Pendente:** fiar um conector numa `IntegrationDefinition`/
   rota live; migrar o vertical financeiro (Fase C).
-- **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
-  hardcoded; suíte verde via engine.
+- **Fase C (em andamento):** migrar o vertical financeiro — 17 use cases → config.
+  **Onda 1:** os 12 GET data flows (só validam `customerId`) servidos pelo engine
+  em `/api/engine/[flow]`, paridade byte-a-byte com as rotas hardcoded.
+  **Pendente:** grupo query/body (precisa de `validate` com schema referenciado) e
+  a remoção do TS hardcoded.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
 - **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
   integração, simular ao vivo).
