@@ -14,16 +14,24 @@ export abstract class EngineError extends Error {
   abstract readonly code: string;
 }
 
-/** Raised by the `validate` operator when required fields are missing/empty. */
+/** A single field-level validation problem (host-neutral; e.g. from a Zod issue). */
+export interface ValidationIssue {
+  path: string;
+  message: string;
+}
+
+/** Raised by the `validate` operator when fields are missing/empty or fail a schema. */
 export class ValidationError extends EngineError {
   readonly kind: ErrorKind = 'validation';
   readonly code = 'validation_failed';
   readonly missing: readonly string[];
+  readonly issues: readonly ValidationIssue[];
 
-  constructor(missing: readonly string[]) {
+  constructor(missing: readonly string[], issues: readonly ValidationIssue[] = []) {
     super(`validation_failed: ${missing.join(', ')}`);
     this.name = 'ValidationError';
     this.missing = missing;
+    this.issues = issues;
   }
 }
 

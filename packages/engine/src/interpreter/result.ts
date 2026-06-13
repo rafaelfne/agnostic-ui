@@ -20,7 +20,7 @@ export function classify(error: unknown): EngineErrorResult {
       kind: error.kind,
       code: error.code,
       message: error.message,
-      details: { missing: error.missing },
+      details: { missing: error.missing, issues: error.issues },
     };
   }
   if (error instanceof EngineError) {
