@@ -182,8 +182,10 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   ambiente local de um comando (`pnpm setup:local`, [ADR 0003](docs/adr/0003-infraestrutura-local-e-conectores.md));
   **conector REST genérico** (`RestIntegrationRunner`) dirigido por
   `IntegrationDefinition`, com guardião de egress (allowlist/anti-SSRF) e
-  `ISecretResolver` (secret-ref), fail-closed. **Pendente:** ler o flow publicado
-  do store no runtime (cache); conector GraphQL; fiar os conectores numa rota live.
+  `ISecretResolver` (secret-ref), fail-closed; o runtime lê o **flow publicado do
+  store** por tenant (cache TTL, fallback ao registry in-code) em `/api/engine/[flow]`,
+  fechando o loop builder→store→runtime. **Pendente:** conector GraphQL; fiar um
+  conector REST numa `IntegrationDefinition`/rota live.
 - **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
   hardcoded; suíte verde via engine.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
