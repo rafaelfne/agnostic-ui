@@ -4,7 +4,10 @@ import type {
   IntegrationKind,
 } from '@yukilabs/agnostic-ui-engine';
 
+import type { HttpRunnerDeps } from './BaseHttpRunner';
+import { GraphqlIntegrationRunner } from './GraphqlIntegrationRunner';
 import type { IntegrationRegistry } from './integrationRegistry';
+import { RestIntegrationRunner } from './RestIntegrationRunner';
 
 /**
  * Routes a call to the runner registered for the integration's `kind`
@@ -28,4 +31,12 @@ export class IntegrationRunnerRouter implements IIntegrationRunner {
     }
     return runner.run(call);
   }
+}
+
+/** Wires the generic HTTP connectors (rest + graphql) behind one router. */
+export function createIntegrationRunner(deps: HttpRunnerDeps): IIntegrationRunner {
+  return new IntegrationRunnerRouter(deps.registry, {
+    rest: new RestIntegrationRunner(deps),
+    graphql: new GraphqlIntegrationRunner(deps),
+  });
 }
