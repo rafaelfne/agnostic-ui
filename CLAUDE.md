@@ -180,12 +180,13 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   atrás da port `IConfigStore` (Drizzle/Postgres), com RLS por tenant, draft/publish/
   versão e **publish fail-closed** (Zod + dry-run), migrations em `drizzle/`;
   ambiente local de um comando (`pnpm setup:local`, [ADR 0003](docs/adr/0003-infraestrutura-local-e-conectores.md));
-  **conector REST genérico** (`RestIntegrationRunner`) dirigido por
-  `IntegrationDefinition`, com guardião de egress (allowlist/anti-SSRF) e
-  `ISecretResolver` (secret-ref), fail-closed; o runtime lê o **flow publicado do
-  store** por tenant (cache TTL, fallback ao registry in-code) em `/api/engine/[flow]`,
-  fechando o loop builder→store→runtime. **Pendente:** conector GraphQL; fiar um
-  conector REST numa `IntegrationDefinition`/rota live.
+  **conectores genéricos REST e GraphQL** dirigidos por `IntegrationDefinition`
+  (núcleo `BaseHttpRunner` compartilhado, despacho por `IntegrationRunnerRouter`),
+  com guardião de egress (allowlist/anti-SSRF) e `ISecretResolver` (secret-ref),
+  fail-closed; o runtime lê o **flow publicado do store** por tenant (cache TTL,
+  fallback ao registry in-code) em `/api/engine/[flow]`, fechando o loop
+  builder→store→runtime. **Pendente:** fiar um conector numa `IntegrationDefinition`/
+  rota live; migrar o vertical financeiro (Fase C).
 - **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
   hardcoded; suíte verde via engine.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
