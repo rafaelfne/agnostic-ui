@@ -22,6 +22,14 @@ São **três peças**:
 
 Pacotes publicados sob o escopo `@yukilabs/agnostic-ui-*`.
 
+> **Virada em curso (config-driven):** o engine de execução está sendo separado
+> da lógica financeira. Os use cases deixam de ser TypeScript e passam a ser
+> **config declarativa (Zod) interpretada em runtime** por um engine agnóstico
+> (`@yukilabs/agnostic-ui-engine`), sem codegen e sem `eval`. O vertical
+> financeiro vira o **primeiro conjunto de config** — a implementação de
+> referência. Decisão em [ADR 0002](docs/adr/0002-meta-engine-config-runtime.md);
+> trilha de fases em [`docs/plano-meta-engine.md`](docs/plano-meta-engine.md).
+
 ## Arquitetura
 
 ### Clean Architecture (no BFF)
@@ -83,7 +91,7 @@ invest, portfolios, portfolio-builder).
   do manual (`--tenant-primary` + `-rgb`, `--tenant-secondary`, `--tenant-canvas`,
   `--tenant-logo-url`) e o layout as injeta como custom properties inline — saem
   no **HTML do SSR**, sem JS no cliente.
-- **Adiado para o pacote `react` (Fase 2):** o provider de tema client
+- **Adiado para o pacote `react` (Fase D):** o provider de tema client
   (`useLayoutEffect` no `:root`), o renderer SDUI e a app bar interativa.
 
 ### Subsistemas
@@ -104,7 +112,7 @@ invest, portfolios, portfolio-builder).
 - **Multi-tenancy** — descritor declarativo do tenant (`id`/`name`/`slug`/
   `dataSource`/`theme`/`layout`/`security`/`features`/`version`); segmentos de
   rota e tema por tenant aplicados **server-side** no BFF (ver acima), com o
-  provider de tema client adiado para a Fase 2.
+  provider de tema client adiado para a Fase D.
 
 ### Modo de execução (sandbox vs live)
 
@@ -145,23 +153,40 @@ Mapeamento de erro → HTTP:
 
 **Turborepo + pnpm.** Workspaces em `packages/*` (e `apps/*` no futuro).
 
-| Pacote                        | Papel                                                                              | Estado                     |
-| ----------------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
-| `@yukilabs/agnostic-ui-core`  | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge | **Em construção (Fase 0)** |
-| `@yukilabs/agnostic-ui-next`  | BFF Next.js (Clean Architecture, DI, gateways, rotas)                              | Planejado (Fase 1)         |
-| `@yukilabs/agnostic-ui-react` | Renderer SDUI, data-binding, FlowEngine, providers de tema/sandbox                 | Planejado (Fase 2)         |
+| Pacote                         | Papel                                                                                    | Estado                     |
+| ------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------- |
+| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge       | Pronto (Fase 0)            |
+| `@yukilabs/agnostic-ui-next`   | BFF Next.js (Clean Architecture, DI, gateways, rotas); vira host do runtime na Fase B    | Fase 1 concluída           |
+| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura | **Em construção (Fase A)** |
+| `@yukilabs/agnostic-ui-react`  | Renderer SDUI, data-binding, FlowEngine, providers de tema/sandbox                       | Planejado (Fase D)         |
 
 SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven) implementam o **contrato
 do bridge** definido no `core` — adiados, mas o contrato já vive aqui.
 
 ### Roadmap
 
-- **Fase 0 (atual):** monorepo + `core`.
-- **Fase 1:** `next` (BFF).
-- **Fase 2:** `react` (renderer).
-- **Fase 3:** app de referência (playground) + e2e + CI de publish.
-- **Fase 4:** distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal managed).
-- **Fase 5:** SDKs nativos.
+A virada para plataforma dirigida por config ([ADR 0002](docs/adr/0002-meta-engine-config-runtime.md))
+reordena as fases. As **Fases 0 e 1** (monorepo + `core` + BFF `next` com Clean
+Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
+
+- **Fase A (atual):** engine core — `@yukilabs/agnostic-ui-engine`: schemas Zod dos
+  primitivos, interpretador de flow, operadores (`validate`, `call-integration`,
+  `compose-template`, `branch`, `emit-event`), avaliador de expressão seguro. Puro,
+  100% testado, **sem UI/store**.
+- **Fase B:** host + conectores + store — engine no `next`, conectores REST/GraphQL/
+  Mock genéricos (allowlist/secret-ref), roteamento catch-all de trigger, config
+  store (Supabase/Postgres) com draft/publish/versão. Migrar `GetBalance` como prova.
+- **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
+  hardcoded; suíte verde via engine.
+- **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
+- **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
+  integração, simular ao vivo).
+- **Fase F:** polimento no-code — construtor visual de expressões, formulários por
+  schema, authz, migração de schema de config, trace de execução.
+
+Depois da Fase F: distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal
+managed) e SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven), que implementam
+o contrato do bridge já definido no `core`.
 
 ## Convenções de código
 
