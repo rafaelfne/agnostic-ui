@@ -6,7 +6,7 @@ import {
   resolveProfile,
 } from '../context';
 import { ConfigError } from '../errors';
-import { type EmittedEvent, type IEventBus, InMemoryEventBus } from '../events';
+import type { EmittedEvent, IEventBus } from '../events';
 import { evaluateExpression } from '../expression';
 import {
   type EngineServices,

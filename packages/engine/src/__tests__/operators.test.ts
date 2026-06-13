@@ -2,7 +2,7 @@ import type { ExecutionContext, MockProfile } from '@yukilabs/agnostic-ui-core';
 import { describe, expect, it } from 'vitest';
 
 import { createFlowContext } from '../context';
-import { IntegrationError, ValidationError } from '../errors';
+import { ValidationError } from '../errors';
 import { InMemoryEventBus } from '../events';
 import { evaluateExpression } from '../expression';
 import {
