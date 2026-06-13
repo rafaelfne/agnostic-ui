@@ -6,3 +6,4 @@ export * from './expression';
 export * from './ports';
 export * from './events';
 export * from './operators';
+export * from './interpreter';

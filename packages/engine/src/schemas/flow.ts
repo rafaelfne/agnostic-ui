@@ -23,3 +23,5 @@ export const FlowDefinitionSchema = z.object({
   emits: z.array(IdSchema).default([]),
 });
 export type FlowDefinition = z.infer<typeof FlowDefinitionSchema>;
+/** The pre-default input shape — `input`/`emits` optional. What `runFlow` accepts. */
+export type FlowDefinitionInput = z.input<typeof FlowDefinitionSchema>;
