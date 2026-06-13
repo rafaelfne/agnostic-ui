@@ -298,12 +298,19 @@ comportamento → commit direto em `chore/` ou `docs/`.
 
 ```bash
 pnpm install                  # instala o workspace
+pnpm setup:local              # sobe o Supabase local + migrations + seed + .env.local (ADR 0003)
+pnpm reset:local              # derruba o Supabase local (supabase stop)
 pnpm turbo run build          # build de todos os pacotes
 pnpm turbo run test           # testes (Vitest)
 pnpm turbo run lint typecheck # lint + typecheck
 pnpm changeset                # registra mudança para versionamento
 pnpm release                  # build + changeset publish
 ```
+
+> **Ambiente local:** `pnpm setup:local` (ADR 0003) precisa de Docker + CLI do
+> Supabase; sobe o stack em portas `554xx`, aplica `packages/next/drizzle/*.sql` e
+> seeda o flow `get-balance` no config store. Gera `packages/next/.env.local`
+> (gitignored); `.env.example` documenta o shape.
 
 ## Glossário
 
