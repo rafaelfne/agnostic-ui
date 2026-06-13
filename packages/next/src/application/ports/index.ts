@@ -3,6 +3,7 @@ export * from './tokenProvider';
 export * from './cache';
 export * from './configRepo';
 export * from './configStore';
+export * from './secretResolver';
 export * from './logger';
 export * from './tenantConfigRepository';
 export * from './tokens';
