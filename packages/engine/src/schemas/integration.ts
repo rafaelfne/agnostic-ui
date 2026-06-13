@@ -12,6 +12,8 @@ export const OperationDefSchema = z.object({
   id: IdSchema,
   method: HttpMethodSchema.optional(),
   path: z.string().optional(),
+  /** The GraphQL document, for `kind: 'graphql'` integrations. */
+  query: z.string().optional(),
   /** Schema reference validating the request input. */
   input: SchemaRefSchema.optional(),
   /** Maps the raw response into a domain shape. */
