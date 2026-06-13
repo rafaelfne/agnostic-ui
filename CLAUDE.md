@@ -188,10 +188,12 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   builder→store→runtime. **Pendente:** fiar um conector numa `IntegrationDefinition`/
   rota live; migrar o vertical financeiro (Fase C).
 - **Fase C (em andamento):** migrar o vertical financeiro — 17 use cases → config.
-  **Onda 1:** os 12 GET data flows (só validam `customerId`) servidos pelo engine
-  em `/api/engine/[flow]`, paridade byte-a-byte com as rotas hardcoded.
-  **Pendente:** grupo query/body (precisa de `validate` com schema referenciado) e
-  a remoção do TS hardcoded.
+  **Os 17 já têm paridade byte-a-byte** servidos pelo engine em `/api/engine/[flow]`
+  ao lado das rotas hardcoded: onda 1 (12 GET só com `customerId`) e onda 2 (5
+  query/body com `validate` contra schema Zod referenciado — `EngineServices.schemas`
+  no engine, registry no host; a rota injeta `customerId` do contexto no request).
+  **Pendente:** remover o TS hardcoded (use cases/controllers/rotas) e a regeneração
+  da DI.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
 - **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
   integração, simular ao vivo).
