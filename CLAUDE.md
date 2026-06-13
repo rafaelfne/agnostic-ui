@@ -178,9 +178,12 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   hardcoded (paridade provada), via `EngineCoreIntegrationRunner` sobre o
   `ICoreGateway`; config store append-only (`config_artifact`/`config_version`)
   atrás da port `IConfigStore` (Drizzle/Postgres), com RLS por tenant, draft/publish/
-  versão e **publish fail-closed** (Zod + dry-run), migrations em `drizzle/`.
-  **Pendente:** ler o flow publicado do store no runtime (cache); **conectores
-  REST/GraphQL genéricos** com allowlist/anti-SSRF — exigem ADR de segurança próprio.
+  versão e **publish fail-closed** (Zod + dry-run), migrations em `drizzle/`;
+  ambiente local de um comando (`pnpm setup:local`, [ADR 0003](docs/adr/0003-infraestrutura-local-e-conectores.md));
+  **conector REST genérico** (`RestIntegrationRunner`) dirigido por
+  `IntegrationDefinition`, com guardião de egress (allowlist/anti-SSRF) e
+  `ISecretResolver` (secret-ref), fail-closed. **Pendente:** ler o flow publicado
+  do store no runtime (cache); conector GraphQL; fiar os conectores numa rota live.
 - **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
   hardcoded; suíte verde via engine.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
