@@ -88,6 +88,9 @@ importers:
       '@yukilabs/agnostic-ui-core':
         specifier: workspace:*
         version: link:../core
+      '@yukilabs/agnostic-ui-engine':
+        specifier: workspace:*
+        version: link:../engine
       jose:
         specifier: ^6.2.3
         version: 6.2.3
