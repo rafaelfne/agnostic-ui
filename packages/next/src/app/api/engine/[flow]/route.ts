@@ -2,7 +2,7 @@ import { runFlow } from '@yukilabs/agnostic-ui-engine';
 
 import { ICORE_GATEWAY_TOKEN } from '../../../../application/ports';
 import { createRequestContainer, resolveRequestContext } from '../../../../infra';
-import { EngineCoreIntegrationRunner, getFlow } from '../../../../infra/engine';
+import { EngineCoreIntegrationRunner, getFlowLoader } from '../../../../infra/engine';
 import { engineResultToResponse, internalError } from '../../../../interface';
 
 /**
@@ -22,8 +22,8 @@ export async function GET(
     }
 
     const { flow: flowId } = await params;
-    const flow = getFlow(flowId);
-    if (flow === undefined) {
+    const flow = await getFlowLoader().load(resolved.ctx.tenantId, flowId);
+    if (flow === null) {
       return Response.json({ error: 'unknown_flow' }, { status: 404 });
     }
 
