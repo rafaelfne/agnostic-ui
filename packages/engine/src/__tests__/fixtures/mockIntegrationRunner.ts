@@ -20,7 +20,7 @@ interface ProfileFixtures {
   empty?: () => unknown;
 }
 
-/** Fixtures identical to packages/next/.../fixtures/balance.ts. */
+/** Fixtures identical to packages/next/.../fixtures/{balance,invest}.ts. */
 const fixtures: Record<string, Record<string, ProfileFixtures>> = {
   core: {
     getBalance: {
@@ -31,6 +31,15 @@ const fixtures: Record<string, Record<string, ProfileFixtures>> = {
         currency: 'BRL',
       }),
       empty: () => ({ netWorth: 0, available: 0, invested: 0, currency: 'BRL' }),
+    },
+    getInvestFlow: {
+      happyPath: () => ({
+        flowId: 'flow_invest_default',
+        currency: 'BRL',
+        minAmount: 10_000,
+        maxAmount: 100_000_000,
+        suggestedAmounts: [50_000, 100_000, 250_000],
+      }),
     },
   },
 };

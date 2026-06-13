@@ -12,3 +12,38 @@ export const getBalanceFlow: FlowDefinitionInput = {
   ],
   output: '{{ balance }}',
 };
+
+/**
+ * A screen flow exercising `compose-template`: pull invest data, then bind it into
+ * an SDUI tree. No strict oracle exists (the BFF has no server-side SDUI yet) — the
+ * expected tree is designed here and asserted as valid + correctly bound.
+ */
+export const investScreenFlow: FlowDefinitionInput = {
+  id: 'invest-screen',
+  name: 'Invest Screen',
+  input: { from: 'executionContext', pick: ['customerId'] },
+  steps: [
+    { op: 'call-integration', integration: 'core', operation: 'getInvestFlow', as: 'flow' },
+    {
+      op: 'compose-template',
+      as: 'screen',
+      template: {
+        type: 'screen',
+        id: 'invest',
+        children: [
+          { type: 'header', props: { title: 'Investir', currency: '{{ flow.currency }}' } },
+          {
+            type: 'amount-input',
+            props: {
+              min: '{{ flow.minAmount }}',
+              max: '{{ flow.maxAmount }}',
+              currency: '{{ flow.currency }}',
+            },
+          },
+          { type: 'suggestions', props: { values: '{{ flow.suggestedAmounts }}' } },
+        ],
+      },
+    },
+  ],
+  output: '{{ screen }}',
+};
