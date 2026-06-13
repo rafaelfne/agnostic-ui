@@ -6,10 +6,12 @@ ALTER TABLE config_artifact FORCE ROW LEVEL SECURITY;
 ALTER TABLE config_version ENABLE ROW LEVEL SECURITY;
 ALTER TABLE config_version FORCE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS config_artifact_tenant_isolation ON config_artifact;
 CREATE POLICY config_artifact_tenant_isolation ON config_artifact
   USING (tenant_id = current_setting('app.tenant_id', true))
   WITH CHECK (tenant_id = current_setting('app.tenant_id', true));
 
+DROP POLICY IF EXISTS config_version_tenant_isolation ON config_version;
 CREATE POLICY config_version_tenant_isolation ON config_version
   USING (
     EXISTS (
