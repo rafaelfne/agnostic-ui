@@ -15,8 +15,14 @@ export function engineResultToResponse(result: EngineResult): Response {
 
   const { error } = result;
   if (error.kind === 'validation') {
-    const missing = (error.details as { missing?: string[] } | undefined)?.missing ?? [];
-    const message = missing.map((field) => `${field}: required`).join('; ');
+    const details = error.details as
+      | { missing?: string[]; issues?: { path: string; message: string }[] }
+      | undefined;
+    const issues = details?.issues ?? [];
+    const message =
+      issues.length > 0
+        ? issues.map((issue) => (issue.path ? `${issue.path}: ` : '') + issue.message).join('; ')
+        : (details?.missing ?? []).map((field) => `${field}: required`).join('; ');
     return Response.json({ error: 'Validation failed', message }, { status: 422 });
   }
   if (error.kind === 'integration' && error.code === 'mock_gateway_error') {
