@@ -169,13 +169,18 @@ A virada para plataforma dirigida por config ([ADR 0002](docs/adr/0002-meta-engi
 reordena as fases. As **Fases 0 e 1** (monorepo + `core` + BFF `next` com Clean
 Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
 
-- **Fase A (atual):** engine core — `@yukilabs/agnostic-ui-engine`: schemas Zod dos
-  primitivos, interpretador de flow, operadores (`validate`, `call-integration`,
+- **Fase A (concluída):** engine core — `@yukilabs/agnostic-ui-engine`: schemas Zod
+  dos primitivos, interpretador de flow, operadores (`validate`, `call-integration`,
   `compose-template`, `branch`, `emit-event`), avaliador de expressão seguro. Puro,
   100% testado, **sem UI/store**.
-- **Fase B:** host + conectores + store — engine no `next`, conectores REST/GraphQL/
-  Mock genéricos (allowlist/secret-ref), roteamento catch-all de trigger, config
-  store (Supabase/Postgres) com draft/publish/versão. Migrar `GetBalance` como prova.
+- **Fase B (em andamento):** host + conectores + store. **Entregue:** engine
+  hospedado no `next` servindo `GetBalance` em `/api/engine/[flow]` ao lado da rota
+  hardcoded (paridade provada), via `EngineCoreIntegrationRunner` sobre o
+  `ICoreGateway`; config store append-only (`config_artifact`/`config_version`)
+  atrás da port `IConfigStore` (Drizzle/Postgres), com RLS por tenant, draft/publish/
+  versão e **publish fail-closed** (Zod + dry-run), migrations em `drizzle/`.
+  **Pendente:** ler o flow publicado do store no runtime (cache); **conectores
+  REST/GraphQL genéricos** com allowlist/anti-SSRF — exigem ADR de segurança próprio.
 - **Fase C:** migrar o vertical financeiro — 18 use cases → config; remover TS
   hardcoded; suíte verde via engine.
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
