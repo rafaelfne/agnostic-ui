@@ -1,4 +1,5 @@
 export * from './EngineCoreIntegrationRunner';
+export * from './runEngineFlow';
 export * from './flowRegistry';
 export * from './flows/getBalanceFlow';
 export * from './flows/dataFlows';
