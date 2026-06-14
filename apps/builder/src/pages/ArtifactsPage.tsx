@@ -1,9 +1,8 @@
-import { type ReactElement, useEffect, useMemo, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 
-import { createBuilderClient } from '../api/client';
 import type { ArtifactSummary } from '../api/types';
-import { useAuth } from '../auth/AuthContext';
-import { readEnv } from '../env';
+import { useBuilderClient } from '../api/useBuilderClient';
+import { Nav } from '../components/Nav';
 
 type LoadState =
   | { status: 'loading' }
@@ -11,11 +10,7 @@ type LoadState =
   | { status: 'ready'; artifacts: ArtifactSummary[] };
 
 export function ArtifactsPage(): ReactElement {
-  const { token, signOut } = useAuth();
-  const client = useMemo(
-    () => createBuilderClient({ baseUrl: readEnv().apiBase, getToken: () => token }),
-    [token],
-  );
+  const client = useBuilderClient();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
   useEffect(() => {
@@ -41,12 +36,8 @@ export function ArtifactsPage(): ReactElement {
 
   return (
     <main>
-      <header>
-        <h1>Artefatos</h1>
-        <button type="button" onClick={signOut}>
-          Sair
-        </button>
-      </header>
+      <Nav />
+      <h1>Artefatos</h1>
 
       {state.status === 'loading' && <p>Carregando…</p>}
       {state.status === 'error' && <p role="alert">{state.message}</p>}
