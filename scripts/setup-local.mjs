@@ -41,6 +41,10 @@ function renderEnvLocal(env) {
     `SUPABASE_ANON_KEY="${env.ANON_KEY ?? ''}"`,
     `SUPABASE_SERVICE_ROLE_KEY="${env.SERVICE_ROLE_KEY ?? ''}"`,
     `JWT_HS256_SECRET="${env.JWT_SECRET ?? ''}"`,
+    '# Authz do builder (ADR 0004) — o Supabase local emite tokens ES256/JWKS, então',
+    '# a verificação usa o JWKS endpoint; o segredo HS256 fica como fallback legado.',
+    `SUPABASE_JWT_JWKS_URL="${env.API_URL ? `${env.API_URL}/auth/v1/.well-known/jwks.json` : ''}"`,
+    `SUPABASE_JWT_SECRET="${env.JWT_SECRET ?? ''}"`,
     'EGRESS_ALLOWLIST=""',
     '',
   ].join('\n');
@@ -85,10 +89,37 @@ if (env.DB_URL === undefined) {
 console.log('▶ Migrations + seed…');
 sh('node', ['--experimental-transform-types', join(nextDir, 'scripts', 'provision-local.ts')], {
   stdio: 'inherit',
-  env: { ...process.env, DATABASE_URL: env.DB_URL },
+  env: {
+    ...process.env,
+    DATABASE_URL: env.DB_URL,
+    SUPABASE_URL: env.API_URL,
+    SUPABASE_SERVICE_ROLE_KEY: env.SERVICE_ROLE_KEY,
+  },
 });
 
 const envLocalPath = join(nextDir, '.env.local');
 writeFileSync(envLocalPath, renderEnvLocal(env));
 console.log(`✔ .env.local escrito em ${envLocalPath}`);
+
+// O SPA (apps/builder) lê VITE_* no dev/build — gera o .env.local dele também.
+const builderEnvPath = join(root, 'apps', 'builder', '.env.local');
+writeFileSync(
+  builderEnvPath,
+  [
+    '# Gerado por `pnpm setup:local` — não commitar. A anon key é pública por design.',
+    `VITE_SUPABASE_URL="${env.API_URL ?? ''}"`,
+    `VITE_SUPABASE_ANON_KEY="${env.ANON_KEY ?? ''}"`,
+    'VITE_API_BASE=""',
+    '',
+  ].join('\n'),
+);
+console.log(`✔ .env.local escrito em ${builderEnvPath}`);
 console.log(`✔ Ambiente pronto. Studio: ${env.STUDIO_URL ?? '—'} · DB: ${env.DB_URL}`);
+console.log('');
+console.log('▶ Para abrir o builder:');
+console.log('    pnpm --filter @yukilabs/agnostic-ui-next dev      # BFF em :3000');
+console.log('    pnpm --filter @yukilabs/agnostic-ui-builder dev   # SPA em :5173');
+console.log('  Logins do seed (senha: builder-local-123):');
+console.log('    admin@partnerco.com  (partnerco · publisher)');
+console.log('    editor@partnerco.com (partnerco · editor)');
+console.log('    admin@acme.com       (acme · publisher)');
