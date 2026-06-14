@@ -156,7 +156,7 @@ Mapeamento de erro → HTTP:
 | Pacote                         | Papel                                                                                    | Estado                     |
 | ------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------- |
 | `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge       | Pronto (Fase 0)            |
-| `@yukilabs/agnostic-ui-next`   | BFF Next.js (Clean Architecture, DI, gateways, rotas); vira host do runtime na Fase B    | Fase 1 concluída           |
+| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store     | Fase C concluída           |
 | `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura | **Em construção (Fase A)** |
 | `@yukilabs/agnostic-ui-react`  | Renderer SDUI, data-binding, FlowEngine, providers de tema/sandbox                       | Planejado (Fase D)         |
 
@@ -187,13 +187,13 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   fallback ao registry in-code) em `/api/engine/[flow]`, fechando o loop
   builder→store→runtime. **Pendente:** fiar um conector numa `IntegrationDefinition`/
   rota live; migrar o vertical financeiro (Fase C).
-- **Fase C (em andamento):** migrar o vertical financeiro — 17 use cases → config.
-  **Os 17 já têm paridade byte-a-byte** servidos pelo engine em `/api/engine/[flow]`
-  ao lado das rotas hardcoded: onda 1 (12 GET só com `customerId`) e onda 2 (5
-  query/body com `validate` contra schema Zod referenciado — `EngineServices.schemas`
-  no engine, registry no host; a rota injeta `customerId` do contexto no request).
-  **Pendente:** remover o TS hardcoded (use cases/controllers/rotas) e a regeneração
-  da DI.
+- **Fase C (concluída):** vertical financeiro 100% em config. Os 17 use cases viraram
+  `FlowDefinition` (onda 1: 12 GET só com `customerId`; onda 2: 5 query/body com
+  `validate` contra schema Zod referenciado). Onda 3: o `next` virou **host do
+  runtime** — a rota **catch-all `/api/[...path]`** resolve o flow pelo `trigger`
+  (method+path), prefere a versão publicada do store (fallback in-code) e roda no
+  engine; os 17 use cases/controllers/rotas hardcoded foram **removidos** e a DI
+  regenerada vazia. Cobertura por `catchAll.route.test` (fixtures como oráculo).
 - **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
 - **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
   integração, simular ao vivo).
