@@ -22,6 +22,17 @@ export interface ConfigVersionRecord {
   publishedAt: Date | null;
 }
 
+/** Per-artifact summary for the builder's artifact list (no bodies). */
+export interface ConfigArtifactSummary {
+  kind: ConfigArtifactKind;
+  slug: string;
+  createdAt: Date;
+  /** Highest version number, or 0 when the artifact has no versions yet. */
+  latestVersion: number;
+  /** Currently published version number, or `null` when none is published. */
+  publishedVersion: number | null;
+}
+
 export interface IConfigStore {
   /** The currently published body for an artifact, or `null` if none is published. */
   getPublished(ref: ConfigArtifactRef): Promise<unknown | null>;
@@ -31,4 +42,6 @@ export interface IConfigStore {
   publish(ref: ConfigArtifactRef, version: number): Promise<void>;
   /** All versions of an artifact, newest first (empty if the artifact is unknown). */
   listVersions(ref: ConfigArtifactRef): Promise<ConfigVersionRecord[]>;
+  /** Artifacts for a tenant (optionally one `kind`), with draft/published summary. */
+  listArtifacts(tenantId: string, kind?: ConfigArtifactKind): Promise<ConfigArtifactSummary[]>;
 }
