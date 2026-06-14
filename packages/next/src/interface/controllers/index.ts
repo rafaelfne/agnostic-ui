@@ -1,17 +1,6 @@
-export * from './balance/BalanceController';
-export * from './invest/GetInvestFlowController';
-export * from './invest/GetInvestReviewController';
-export * from './invest/PostInvestAmountController';
-export * from './invest/PostInvestIntentionController';
-export * from './investments/GetInvestmentsCategoryController';
-export * from './investments/GetInvestmentsProductsController';
-export * from './investments/GetInvestmentsProductsSummaryController';
-export * from './catalog/GetCatalogCategoryController';
-export * from './catalog/GetCatalogProductDetailsController';
-export * from './catalog/GetCatalogPortfoliosController';
-export * from './portfolioBuilder/GetPortfolioBuilderRiskSelectController';
-export * from './portfolioBuilder/GetPortfolioBuilderPreviewController';
-export * from './portfolioBuilder/PostPortfolioBuilderCreatePortfolioController';
-export * from './portfolioDetails/GetPortfolioHeroController';
-export * from './consolidatedCustody/GetConsolidatedCustodyController';
-export * from './wallets/GetUserWalletsController';
+/**
+ * Os controllers do vertical viraram **config** (Fase C, ADR 0002 §8): a rota
+ * catch-all roda os flows pelo engine. Os schemas Zod (cada `schemas.ts`) ficam,
+ * registrados em `interface/http/engineSchemas` para o operador `validate`.
+ */
+export {};

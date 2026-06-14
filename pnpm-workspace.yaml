@@ -1,6 +1,6 @@
 packages:
   - 'packages/*'
-  # - "apps/*"  # futuro: BFF de referência / playground
+  - 'apps/*'
 
 overrides:
   zod: ^3.25.0

@@ -3,6 +3,8 @@ import type { ICoreGateway } from './coreGateway';
 import type { ITokenProvider } from './tokenProvider';
 import type { ICache } from './cache';
 import type { IConfigRepo } from './configRepo';
+import type { IConfigStore } from './configStore';
+import type { ISecretResolver } from './secretResolver';
 import type { ILogger } from './logger';
 import type { ITenantConfigRepository } from './tenantConfigRepository';
 
@@ -14,6 +16,8 @@ export const ICORE_GATEWAY_TOKEN: InjectionToken<ICoreGateway> = Symbol('ICoreGa
 export const ITOKEN_PROVIDER_TOKEN: InjectionToken<ITokenProvider> = Symbol('ITokenProvider');
 export const ICACHE_TOKEN: InjectionToken<ICache> = Symbol('ICache');
 export const ICONFIG_REPO_TOKEN: InjectionToken<IConfigRepo> = Symbol('IConfigRepo');
+export const ICONFIG_STORE_TOKEN: InjectionToken<IConfigStore> = Symbol('IConfigStore');
+export const ISECRET_RESOLVER_TOKEN: InjectionToken<ISecretResolver> = Symbol('ISecretResolver');
 export const ILOGGER_TOKEN: InjectionToken<ILogger> = Symbol('ILogger');
 export const ITENANT_CONFIG_REPOSITORY_TOKEN: InjectionToken<ITenantConfigRepository> =
   Symbol('ITenantConfigRepository');

@@ -22,6 +22,14 @@ São **três peças**:
 
 Pacotes publicados sob o escopo `@yukilabs/agnostic-ui-*`.
 
+> **Virada em curso (config-driven):** o engine de execução está sendo separado
+> da lógica financeira. Os use cases deixam de ser TypeScript e passam a ser
+> **config declarativa (Zod) interpretada em runtime** por um engine agnóstico
+> (`@yukilabs/agnostic-ui-engine`), sem codegen e sem `eval`. O vertical
+> financeiro vira o **primeiro conjunto de config** — a implementação de
+> referência. Decisão em [ADR 0002](docs/adr/0002-meta-engine-config-runtime.md);
+> trilha de fases em [`docs/plano-meta-engine.md`](docs/plano-meta-engine.md).
+
 ## Arquitetura
 
 ### Clean Architecture (no BFF)
@@ -36,7 +44,8 @@ domain  ←  application  ←  infra
 
 - **domain** — entidades e regras puras. Sem framework, sem I/O.
 - **application** — use cases e **ports** (interfaces): `ICoreGateway`,
-  `ITokenProvider`, `ICache`, `ILogger`, `IConfigRepo`, `ITenantConfigRepository`.
+  `ITokenProvider`, `ICache`, `ILogger`, `IConfigRepo`, `ITenantConfigRepository`,
+  `IConfigStore`, `IAuthz`.
 - **infra** — adapters concretos das ports (gateways Http/Mock, cache, logger).
 - **interface** — controllers e rotas Next.js; traduz HTTP ↔ use cases.
 
@@ -83,7 +92,7 @@ invest, portfolios, portfolio-builder).
   do manual (`--tenant-primary` + `-rgb`, `--tenant-secondary`, `--tenant-canvas`,
   `--tenant-logo-url`) e o layout as injeta como custom properties inline — saem
   no **HTML do SSR**, sem JS no cliente.
-- **Adiado para o pacote `react` (Fase 2):** o provider de tema client
+- **Adiado para o pacote `react` (Fase D):** o provider de tema client
   (`useLayoutEffect` no `:root`), o renderer SDUI e a app bar interativa.
 
 ### Subsistemas
@@ -104,7 +113,7 @@ invest, portfolios, portfolio-builder).
 - **Multi-tenancy** — descritor declarativo do tenant (`id`/`name`/`slug`/
   `dataSource`/`theme`/`layout`/`security`/`features`/`version`); segmentos de
   rota e tema por tenant aplicados **server-side** no BFF (ver acima), com o
-  provider de tema client adiado para a Fase 2.
+  provider de tema client adiado para a Fase D.
 
 ### Modo de execução (sandbox vs live)
 
@@ -143,25 +152,78 @@ Mapeamento de erro → HTTP:
 
 ## Monorepo
 
-**Turborepo + pnpm.** Workspaces em `packages/*` (e `apps/*` no futuro).
+**Turborepo + pnpm.** Workspaces em `packages/*` e `apps/*`.
 
-| Pacote                        | Papel                                                                              | Estado                     |
-| ----------------------------- | ---------------------------------------------------------------------------------- | -------------------------- |
-| `@yukilabs/agnostic-ui-core`  | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge | **Em construção (Fase 0)** |
-| `@yukilabs/agnostic-ui-next`  | BFF Next.js (Clean Architecture, DI, gateways, rotas)                              | Planejado (Fase 1)         |
-| `@yukilabs/agnostic-ui-react` | Renderer SDUI, data-binding, FlowEngine, providers de tema/sandbox                 | Planejado (Fase 2)         |
+| Pacote                          | Papel                                                                                                                                                                 | Estado                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `@yukilabs/agnostic-ui-core`    | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge                                                                                    | Pronto (Fase 0)               |
+| `@yukilabs/agnostic-ui-next`    | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store + **API do builder** (`/api/builder/*` sobre `IConfigStore`, gated por `IAuthz`) | Fase C concluída; builder E.1 |
+| `@yukilabs/agnostic-ui-engine`  | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura                                                                              | **Em construção (Fase A)**    |
+| `@yukilabs/agnostic-ui-react`   | Renderer SDUI (registry + data-binding), FlowEngine client (`useFlow`/`FlowScreen`) e providers de tema/sandbox                                                       | Fase D concluída              |
+| `@yukilabs/agnostic-ui-builder` | **SPA no-code** (Vite/React, `apps/builder`): consome a API do builder; login Supabase + lista de artefatos                                                           | Em construção (Fase E.2)      |
 
 SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven) implementam o **contrato
 do bridge** definido no `core` — adiados, mas o contrato já vive aqui.
 
 ### Roadmap
 
-- **Fase 0 (atual):** monorepo + `core`.
-- **Fase 1:** `next` (BFF).
-- **Fase 2:** `react` (renderer).
-- **Fase 3:** app de referência (playground) + e2e + CI de publish.
-- **Fase 4:** distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal managed).
-- **Fase 5:** SDKs nativos.
+A virada para plataforma dirigida por config ([ADR 0002](docs/adr/0002-meta-engine-config-runtime.md))
+reordena as fases. As **Fases 0 e 1** (monorepo + `core` + BFF `next` com Clean
+Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
+
+- **Fase A (concluída):** engine core — `@yukilabs/agnostic-ui-engine`: schemas Zod
+  dos primitivos, interpretador de flow, operadores (`validate`, `call-integration`,
+  `compose-template`, `branch`, `emit-event`), avaliador de expressão seguro. Puro,
+  100% testado, **sem UI/store**.
+- **Fase B (em andamento):** host + conectores + store. **Entregue:** engine
+  hospedado no `next` servindo `GetBalance` em `/api/engine/[flow]` ao lado da rota
+  hardcoded (paridade provada), via `EngineCoreIntegrationRunner` sobre o
+  `ICoreGateway`; config store append-only (`config_artifact`/`config_version`)
+  atrás da port `IConfigStore` (Drizzle/Postgres), com RLS por tenant, draft/publish/
+  versão e **publish fail-closed** (Zod + dry-run), migrations em `drizzle/`;
+  ambiente local de um comando (`pnpm setup:local`, [ADR 0003](docs/adr/0003-infraestrutura-local-e-conectores.md));
+  **conectores genéricos REST e GraphQL** dirigidos por `IntegrationDefinition`
+  (núcleo `BaseHttpRunner` compartilhado, despacho por `IntegrationRunnerRouter`),
+  com guardião de egress (allowlist/anti-SSRF) e `ISecretResolver` (secret-ref),
+  fail-closed; o runtime lê o **flow publicado do store** por tenant (cache TTL,
+  fallback ao registry in-code) em `/api/engine/[flow]`, fechando o loop
+  builder→store→runtime. **Pendente:** fiar um conector numa `IntegrationDefinition`/
+  rota live; migrar o vertical financeiro (Fase C).
+- **Fase C (concluída):** vertical financeiro 100% em config. Os 17 use cases viraram
+  `FlowDefinition` (onda 1: 12 GET só com `customerId`; onda 2: 5 query/body com
+  `validate` contra schema Zod referenciado). Onda 3: o `next` virou **host do
+  runtime** — a rota **catch-all `/api/[...path]`** resolve o flow pelo `trigger`
+  (method+path), prefere a versão publicada do store (fallback in-code) e roda no
+  engine; os 17 use cases/controllers/rotas hardcoded foram **removidos** e a DI
+  regenerada vazia. Cobertura por `catchAll.route.test` (fixtures como oráculo).
+- **Fase D (concluída):** renderer SDUI — `@yukilabs/agnostic-ui-react`
+  (pré-requisito do builder). `SduiRenderer` percorre a árvore de `TemplateNode` via
+  `ComponentRegistry` (primitivos default + `createRegistry`), com data-binding de
+  `{{...}}` reusando o avaliador do engine; **FlowEngine client** (`createMockRunner`
+  - `useFlow` + `FlowScreen`) roda o flow no browser p/ o "simular"; **providers**
+    de tema (`ThemeProvider`/`themeToCssVars`, mesmas CSS vars do SSR) e sandbox
+    (`SandboxProvider`/`useSandbox`). Testado com `react-dom/server` (sem jsdom).
+- **Fase E (em andamento):** builder no-code — `apps/builder`
+  ([ADR 0004](docs/adr/0004-builder-no-code.md)). **Onda E.1 entregue:** a API do
+  builder no BFF (`/api/builder/[...path]`) sobre o `IConfigStore`, gated pela nova
+  port **`IAuthz`** (adapter Supabase Auth: verifica o access-token JWT via jose,
+  identidade de `app_metadata`, fail-closed/opt-in). Rotas REST por tenant/kind:
+  listar artefatos, listar versões, ler publicado, salvar draft (papel `editor`),
+  publicar/rollback (papel `publisher`); o tenant vem da sessão verificada, nunca
+  de header. Store estendido com `listArtifacts` e `publishArtifactVersion`
+  (publish multi-kind fail-closed). **Ondas E.2/E.3 entregues:** o SPA `apps/builder`
+  (primeiro `apps/*`; Vite/React + react-router) — cliente HTTP tipado da API, login
+  Supabase (GoTrue REST, sem SDK) com rota protegida fail-closed, lista de artefatos
+  e **editor de flow** (campos + steps com forms tipados por op — JSON para
+  compose-template/branch; validação client-side pelo `FlowDefinitionSchema`;
+  salvar rascunho + publicar/rollback). **Pendente:** editor de telas SDUI, wizard
+  de integração e simular ao vivo (FlowEngine client do pacote `react`).
+- **Fase F:** polimento no-code — construtor visual de expressões, formulários por
+  schema, authz, migração de schema de config, trace de execução.
+
+Depois da Fase F: distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal
+managed) e SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven), que implementam
+o contrato do bridge já definido no `core`.
 
 ## Convenções de código
 
@@ -268,12 +330,19 @@ comportamento → commit direto em `chore/` ou `docs/`.
 
 ```bash
 pnpm install                  # instala o workspace
+pnpm setup:local              # sobe o Supabase local + migrations + seed + .env.local (ADR 0003)
+pnpm reset:local              # derruba o Supabase local (supabase stop)
 pnpm turbo run build          # build de todos os pacotes
 pnpm turbo run test           # testes (Vitest)
 pnpm turbo run lint typecheck # lint + typecheck
 pnpm changeset                # registra mudança para versionamento
 pnpm release                  # build + changeset publish
 ```
+
+> **Ambiente local:** `pnpm setup:local` (ADR 0003) precisa de Docker + CLI do
+> Supabase; sobe o stack em portas `554xx`, aplica `packages/next/drizzle/*.sql` e
+> seeda o flow `get-balance` no config store. Gera `packages/next/.env.local`
+> (gitignored); `.env.example` documenta o shape.
 
 ## Glossário
 

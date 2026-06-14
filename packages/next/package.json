@@ -18,8 +18,11 @@
   "dependencies": {
     "@upstash/redis": "^1.38.0",
     "@yukilabs/agnostic-ui-core": "workspace:*",
+    "@yukilabs/agnostic-ui-engine": "workspace:*",
+    "drizzle-orm": "^0.45.2",
     "jose": "^6.2.3",
     "next": "^16.2.6",
+    "postgres": "^3.4.9",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "reflect-metadata": "^0.2.2",
@@ -27,6 +30,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.2",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
