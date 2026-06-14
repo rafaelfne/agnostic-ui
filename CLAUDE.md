@@ -201,8 +201,10 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   - `useFlow` + `FlowScreen`) roda o flow no browser p/ o "simular"; **providers**
     de tema (`ThemeProvider`/`themeToCssVars`, mesmas CSS vars do SSR) e sandbox
     (`SandboxProvider`/`useSandbox`). Testado com `react-dom/server` (sem jsdom).
-- **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
-  integração, simular ao vivo).
+- **Fase E:** builder no-code — `apps/builder` ([ADR 0004](docs/adr/0004-builder-no-code.md)):
+  SPA Vite/React + API `/api/builder/*` no BFF (sobre o `IConfigStore`), authz por
+  `IAuthz` (Supabase Auth). MVP: editor de flow, editor de telas SDUI, wizard de
+  integração e simular ao vivo (FlowEngine client do pacote `react`).
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por
   schema, authz, migração de schema de config, trace de execução.
 
