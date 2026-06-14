@@ -2,6 +2,7 @@ export * from './version';
 export * from './registry';
 export * from './binding';
 export * from './primitives';
+export * from './shadcnRegistry';
 export * from './renderer';
 export * from './mockRunner';
 export * from './useFlow';

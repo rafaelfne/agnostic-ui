@@ -34,7 +34,8 @@
   },
   "dependencies": {
     "@yukilabs/agnostic-ui-core": "workspace:*",
-    "@yukilabs/agnostic-ui-engine": "workspace:*"
+    "@yukilabs/agnostic-ui-engine": "workspace:*",
+    "recharts": "^2.15.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
