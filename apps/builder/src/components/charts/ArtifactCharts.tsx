@@ -77,9 +77,12 @@ export function PublicationChart({
           data={data}
           dataKey="value"
           nameKey="name"
-          innerRadius={54}
-          outerRadius={82}
+          innerRadius={52}
+          outerRadius={84}
           paddingAngle={3}
+          cornerRadius={4}
+          startAngle={90}
+          endAngle={-270}
           strokeWidth={0}
         >
           {data.map((d, i) => (
