@@ -18,6 +18,7 @@ function fakeStore(getPublished: IConfigStore['getPublished']): IConfigStore {
     saveDraft: async () => 1,
     publish: async () => undefined,
     listVersions: async () => [],
+    listArtifacts: async () => [],
   };
 }
 

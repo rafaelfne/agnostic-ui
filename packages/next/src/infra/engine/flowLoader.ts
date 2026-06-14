@@ -1,7 +1,7 @@
 import type { FlowDefinitionInput } from '@yukilabs/agnostic-ui-engine';
 
 import type { IConfigStore } from '../../application/ports';
-import { DrizzleConfigStore, createConfigDatabase } from '../store';
+import { getConfigStore } from '../store';
 
 import { type FlowCache, TtlFlowCache } from './flowCache';
 import { getFlow } from './flowRegistry';
@@ -52,9 +52,10 @@ let singleton: FlowLoader | null = null;
  */
 export function getFlowLoader(): FlowLoader {
   if (singleton !== null) return singleton;
-  const url = process.env.DATABASE_URL;
-  const store =
-    url !== undefined && url !== '' ? new DrizzleConfigStore(createConfigDatabase(url)) : null;
-  singleton = createFlowLoader({ store, fallback: getFlow, cache: new TtlFlowCache(CACHE_TTL_MS) });
+  singleton = createFlowLoader({
+    store: getConfigStore(),
+    fallback: getFlow,
+    cache: new TtlFlowCache(CACHE_TTL_MS),
+  });
   return singleton;
 }

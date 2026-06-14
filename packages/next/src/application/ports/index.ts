@@ -1,3 +1,4 @@
+export * from './authz';
 export * from './coreGateway';
 export * from './tokenProvider';
 export * from './cache';

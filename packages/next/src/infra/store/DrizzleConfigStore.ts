@@ -2,7 +2,9 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import type {
+  ConfigArtifactKind,
   ConfigArtifactRef,
+  ConfigArtifactSummary,
   ConfigVersionRecord,
   ConfigVersionStatus,
   IConfigStore,
@@ -108,6 +110,45 @@ export class DrizzleConfigStore implements IConfigStore {
         .where(and(eq(configVersion.artifactId, artifactId), eq(configVersion.version, version)))
         .returning({ id: configVersion.id });
       if (promoted.length === 0) throw new Error('version_not_found');
+    });
+  }
+
+  async listArtifacts(
+    tenantId: string,
+    kind?: ConfigArtifactKind,
+  ): Promise<ConfigArtifactSummary[]> {
+    return this.withTenant(tenantId, async (tx) => {
+      const rows = await tx
+        .select({
+          kind: configArtifact.kind,
+          slug: configArtifact.slug,
+          createdAt: configArtifact.createdAt,
+          latestVersion: sql<number>`coalesce(max(${configVersion.version}), 0)`,
+          publishedVersion: sql<
+            number | null
+          >`max(${configVersion.version}) filter (where ${configVersion.status} = 'published')`,
+        })
+        .from(configArtifact)
+        .leftJoin(configVersion, eq(configVersion.artifactId, configArtifact.id))
+        .where(
+          kind === undefined
+            ? eq(configArtifact.tenantId, tenantId)
+            : and(eq(configArtifact.tenantId, tenantId), eq(configArtifact.kind, kind)),
+        )
+        .groupBy(
+          configArtifact.id,
+          configArtifact.kind,
+          configArtifact.slug,
+          configArtifact.createdAt,
+        )
+        .orderBy(configArtifact.kind, configArtifact.slug);
+      return rows.map((row) => ({
+        kind: row.kind as ConfigArtifactKind,
+        slug: row.slug,
+        createdAt: row.createdAt,
+        latestVersion: Number(row.latestVersion),
+        publishedVersion: row.publishedVersion === null ? null : Number(row.publishedVersion),
+      }));
     });
   }
 

@@ -44,7 +44,8 @@ domain  ←  application  ←  infra
 
 - **domain** — entidades e regras puras. Sem framework, sem I/O.
 - **application** — use cases e **ports** (interfaces): `ICoreGateway`,
-  `ITokenProvider`, `ICache`, `ILogger`, `IConfigRepo`, `ITenantConfigRepository`.
+  `ITokenProvider`, `ICache`, `ILogger`, `IConfigRepo`, `ITenantConfigRepository`,
+  `IConfigStore`, `IAuthz`.
 - **infra** — adapters concretos das ports (gateways Http/Mock, cache, logger).
 - **interface** — controllers e rotas Next.js; traduz HTTP ↔ use cases.
 
@@ -153,12 +154,12 @@ Mapeamento de erro → HTTP:
 
 **Turborepo + pnpm.** Workspaces em `packages/*` (e `apps/*` no futuro).
 
-| Pacote                         | Papel                                                                                                           | Estado                     |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge                              | Pronto (Fase 0)            |
-| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store                            | Fase C concluída           |
-| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura                        | **Em construção (Fase A)** |
-| `@yukilabs/agnostic-ui-react`  | Renderer SDUI (registry + data-binding), FlowEngine client (`useFlow`/`FlowScreen`) e providers de tema/sandbox | Fase D concluída           |
+| Pacote                         | Papel                                                                                                                                                                 | Estado                        |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge                                                                                    | Pronto (Fase 0)               |
+| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store + **API do builder** (`/api/builder/*` sobre `IConfigStore`, gated por `IAuthz`) | Fase C concluída; builder E.1 |
+| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura                                                                              | **Em construção (Fase A)**    |
+| `@yukilabs/agnostic-ui-react`  | Renderer SDUI (registry + data-binding), FlowEngine client (`useFlow`/`FlowScreen`) e providers de tema/sandbox                                                       | Fase D concluída              |
 
 SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven) implementam o **contrato
 do bridge** definido no `core` — adiados, mas o contrato já vive aqui.
@@ -201,10 +202,17 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   - `useFlow` + `FlowScreen`) roda o flow no browser p/ o "simular"; **providers**
     de tema (`ThemeProvider`/`themeToCssVars`, mesmas CSS vars do SSR) e sandbox
     (`SandboxProvider`/`useSandbox`). Testado com `react-dom/server` (sem jsdom).
-- **Fase E:** builder no-code — `apps/builder` ([ADR 0004](docs/adr/0004-builder-no-code.md)):
-  SPA Vite/React + API `/api/builder/*` no BFF (sobre o `IConfigStore`), authz por
-  `IAuthz` (Supabase Auth). MVP: editor de flow, editor de telas SDUI, wizard de
-  integração e simular ao vivo (FlowEngine client do pacote `react`).
+- **Fase E (em andamento):** builder no-code — `apps/builder`
+  ([ADR 0004](docs/adr/0004-builder-no-code.md)). **Onda E.1 entregue:** a API do
+  builder no BFF (`/api/builder/[...path]`) sobre o `IConfigStore`, gated pela nova
+  port **`IAuthz`** (adapter Supabase Auth: verifica o access-token JWT via jose,
+  identidade de `app_metadata`, fail-closed/opt-in). Rotas REST por tenant/kind:
+  listar artefatos, listar versões, ler publicado, salvar draft (papel `editor`),
+  publicar/rollback (papel `publisher`); o tenant vem da sessão verificada, nunca
+  de header. Store estendido com `listArtifacts` e `publishArtifactVersion`
+  (publish multi-kind fail-closed). **Pendente:** o SPA Vite/React (E.2+) — editor
+  de flow, editor de telas SDUI, wizard de integração e simular ao vivo (FlowEngine
+  client do pacote `react`).
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por
   schema, authz, migração de schema de config, trace de execução.
 

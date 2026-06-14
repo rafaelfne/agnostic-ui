@@ -1,0 +1,192 @@
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import type { IAuthz } from '../application/ports';
+import { SupabaseAuthz } from '../infra/authz/SupabaseAuthz';
+import { type ConfigDatabase, DrizzleConfigStore } from '../infra/store/DrizzleConfigStore';
+import { applyMigrations } from '../infra/store/migrate';
+import { storeSchema } from '../infra/store/schema';
+import { type BuilderDeps, handleBuilderRequest } from '../interface/builder/builderApi';
+
+async function freshStore(): Promise<DrizzleConfigStore> {
+  const client = new PGlite();
+  await applyMigrations((sql) => client.exec(sql));
+  const db = drizzle(client, { schema: storeSchema }) as unknown as ConfigDatabase;
+  return new DrizzleConfigStore(db);
+}
+
+/** Real authz over a stub verifier, so the route exercises the actual role logic. */
+function authzFor(payload: Record<string, unknown> | null): IAuthz {
+  return new SupabaseAuthz(async () => payload);
+}
+
+const identity = (roles: string[], tenantId = 'partnerco') => ({
+  sub: 'user-1',
+  app_metadata: { tenant_id: tenantId, builder_roles: roles },
+});
+
+const editor = authzFor(identity(['editor']));
+const publisher = authzFor(identity(['publisher']));
+const anon = authzFor(null);
+
+const validScreen = {
+  id: 'home',
+  route: '/home',
+  root: { type: 'text', props: { value: 'hi' } },
+  dataFlow: 'get-balance',
+};
+
+let store: DrizzleConfigStore;
+beforeEach(async () => {
+  store = await freshStore();
+});
+
+interface CallOpts {
+  authz?: IAuthz;
+  store?: BuilderDeps['store'];
+  body?: unknown;
+  query?: string;
+}
+
+function call(method: string, path: string, opts: CallOpts = {}): Promise<Response> {
+  const url = `https://bff.test/api/builder/${path}${opts.query ?? ''}`;
+  const init: RequestInit = { method, headers: { authorization: 'Bearer t' } };
+  if (opts.body !== undefined) {
+    init.body = typeof opts.body === 'string' ? opts.body : JSON.stringify(opts.body);
+    init.headers = { ...init.headers, 'content-type': 'application/json' };
+  }
+  return handleBuilderRequest(new Request(url, init), path.split('/'), {
+    store: opts.store === undefined ? store : opts.store,
+    authz: opts.authz ?? editor,
+  });
+}
+
+describe('builder API — authz gating (fail-closed)', () => {
+  it('401 when unauthenticated', async () => {
+    const res = await call('GET', 'artifacts', { authz: anon });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'unauthenticated' });
+  });
+
+  it('403 when authenticated but lacking the required role (editor publishing)', async () => {
+    await store.saveDraft({ tenantId: 'partnerco', kind: 'screen', slug: 'home' }, validScreen);
+    const res = await call('POST', 'artifacts/screen/home/publish', {
+      authz: editor,
+      body: { version: 1 },
+    });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: 'forbidden' });
+  });
+
+  it('503 when the store is unavailable', async () => {
+    const res = await call('GET', 'artifacts', { store: null });
+    expect(res.status).toBe(503);
+  });
+});
+
+describe('builder API — artifact lifecycle', () => {
+  it('saves a draft scoped to the caller tenant, then lists and reads it', async () => {
+    const save = await call('POST', 'artifacts/screen/home/versions', { body: validScreen });
+    expect(save.status).toBe(201);
+    expect(await save.json()).toEqual({ version: 1 });
+
+    const list = await call('GET', 'artifacts');
+    expect(await list.json()).toEqual([
+      {
+        kind: 'screen',
+        slug: 'home',
+        createdAt: expect.any(String),
+        latestVersion: 1,
+        publishedVersion: null,
+      },
+    ]);
+
+    const versions = await call('GET', 'artifacts/screen/home/versions');
+    const rows = (await versions.json()) as Array<Record<string, unknown>>;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ version: 1, status: 'draft', body: validScreen });
+    expect(rows[0]).not.toHaveProperty('artifactId');
+  });
+
+  it('does not expose another tenant artifacts (tenant from session, not header)', async () => {
+    await call('POST', 'artifacts/screen/home/versions', { body: validScreen, authz: editor });
+    const otherEditor = authzFor(identity(['editor'], 'otherco'));
+    const list = await call('GET', 'artifacts', { authz: otherEditor });
+    expect(await list.json()).toEqual([]);
+  });
+
+  it('publishes a valid draft (publisher) and serves it as published', async () => {
+    await call('POST', 'artifacts/screen/home/versions', { body: validScreen });
+    expect((await call('GET', 'artifacts/screen/home/published')).status).toBe(404);
+
+    const pub = await call('POST', 'artifacts/screen/home/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(pub.status).toBe(200);
+    expect(await pub.json()).toEqual({ published: true, version: 1 });
+
+    const published = await call('GET', 'artifacts/screen/home/published');
+    expect(published.status).toBe(200);
+    expect(await published.json()).toMatchObject({ id: 'home' });
+  });
+
+  it('rolls back by publishing an earlier version', async () => {
+    const ref = { tenantId: 'partnerco', kind: 'screen' as const, slug: 'home' };
+    await store.saveDraft(ref, { ...validScreen, route: '/v1' });
+    await store.saveDraft(ref, { ...validScreen, route: '/v2' });
+    await call('POST', 'artifacts/screen/home/publish', { authz: publisher, body: { version: 2 } });
+    await call('POST', 'artifacts/screen/home/publish', { authz: publisher, body: { version: 1 } });
+    expect(await store.getPublished(ref)).toMatchObject({ route: '/v1' });
+  });
+});
+
+describe('builder API — validation & errors', () => {
+  it('422 fail-closed when publishing a draft that fails its schema', async () => {
+    await store.saveDraft(
+      { tenantId: 'partnerco', kind: 'integration', slug: 'broken' },
+      { id: 'broken', name: 'B', kind: 'rest', operations: [] },
+    );
+    const res = await call('POST', 'artifacts/integration/broken/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'invalid_artifact' });
+  });
+
+  it('404 when publishing a missing version', async () => {
+    await call('POST', 'artifacts/screen/home/versions', { body: validScreen });
+    const res = await call('POST', 'artifacts/screen/home/publish', {
+      authz: publisher,
+      body: { version: 9 },
+    });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toMatchObject({ error: 'version_not_found' });
+  });
+
+  it('400 for an unknown kind', async () => {
+    expect((await call('GET', 'artifacts', { query: '?kind=nope' })).status).toBe(400);
+    expect((await call('GET', 'artifacts/nope/home/versions')).status).toBe(400);
+  });
+
+  it('400 for a malformed draft body', async () => {
+    const res = await call('POST', 'artifacts/screen/home/versions', { body: 'not json{' });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'invalid_json' });
+  });
+
+  it('400 for a non-integer publish version', async () => {
+    const res = await call('POST', 'artifacts/screen/home/publish', {
+      authz: publisher,
+      body: { version: 'x' },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('404 for an unknown route', async () => {
+    expect((await call('GET', 'whatever')).status).toBe(404);
+    expect((await call('DELETE', 'artifacts/screen/home/versions')).status).toBe(404);
+  });
+});
