@@ -1,27 +1,47 @@
-import type { ReactElement } from 'react';
+import { type ReactElement } from 'react';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface StringListInputProps {
   label: string;
-  value: readonly string[];
-  onChange: (next: string[]) => void;
+  value: string[];
+  onChange: (value: string[]) => void;
+  placeholder?: string;
+  /** Optional helper text shown next to the label. */
+  hint?: string;
 }
 
-/** Edits a `string[]` as a comma-separated field — trims and drops empties. */
-export function StringListInput({ label, value, onChange }: StringListInputProps): ReactElement {
+/**
+ * Comma-separated string-list editor (migrated to shadcn Input/Label).
+ * Same value contract as the original: parses on change, trims, drops blanks.
+ */
+export function StringListInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  hint,
+}: StringListInputProps): ReactElement {
   return (
-    <label>
-      {label} <small>(separados por vírgula)</small>
-      <input
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-xs text-muted-foreground">
+        {label}
+        {hint && <span className="font-normal">{hint}</span>}
+      </Label>
+      <Input
+        className="font-mono"
         value={value.join(', ')}
-        onChange={(event) =>
+        placeholder={placeholder}
+        onChange={(e) =>
           onChange(
-            event.target.value
+            e.target.value
               .split(',')
-              .map((item) => item.trim())
-              .filter((item) => item.length > 0),
+              .map((s) => s.trim())
+              .filter(Boolean),
           )
         }
       />
-    </label>
+    </div>
   );
 }
