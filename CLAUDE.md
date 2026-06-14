@@ -153,12 +153,12 @@ Mapeamento de erro → HTTP:
 
 **Turborepo + pnpm.** Workspaces em `packages/*` (e `apps/*` no futuro).
 
-| Pacote                         | Papel                                                                                    | Estado                     |
-| ------------------------------ | ---------------------------------------------------------------------------------------- | -------------------------- |
-| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge       | Pronto (Fase 0)            |
-| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store     | Fase C concluída           |
-| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura | **Em construção (Fase A)** |
-| `@yukilabs/agnostic-ui-react`  | Renderer SDUI, data-binding, FlowEngine, providers de tema/sandbox                       | Planejado (Fase D)         |
+| Pacote                         | Papel                                                                                           | Estado                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------- |
+| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge              | Pronto (Fase 0)            |
+| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store            | Fase C concluída           |
+| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura        | **Em construção (Fase A)** |
+| `@yukilabs/agnostic-ui-react`  | Renderer SDUI (registry + data-binding); FlowEngine client e providers de tema/sandbox a seguir | **Em construção (Fase D)** |
 
 SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven) implementam o **contrato
 do bridge** definido no `core` — adiados, mas o contrato já vive aqui.
@@ -194,7 +194,12 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   (method+path), prefere a versão publicada do store (fallback in-code) e roda no
   engine; os 17 use cases/controllers/rotas hardcoded foram **removidos** e a DI
   regenerada vazia. Cobertura por `catchAll.route.test` (fixtures como oráculo).
-- **Fase D:** renderer SDUI — `@yukilabs/agnostic-ui-react` (pré-requisito do builder).
+- **Fase D (em andamento):** renderer SDUI — `@yukilabs/agnostic-ui-react`
+  (pré-requisito do builder). **Entregue:** núcleo do renderer — `SduiRenderer`
+  percorre a árvore de `TemplateNode` via `ComponentRegistry` (primitivos default +
+  `createRegistry` para o app estender), com data-binding de `{{...}}` reusando o
+  avaliador do engine; testado com `react-dom/server`. **Pendente:** FlowEngine
+  client (preview no browser) e providers de tema/sandbox.
 - **Fase E:** builder no-code — `apps/builder` (editor de flow/telas, wizard de
   integração, simular ao vivo).
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por

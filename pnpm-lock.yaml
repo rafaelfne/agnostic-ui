@@ -138,6 +138,40 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@22.19.19)
 
+  packages/react:
+    dependencies:
+      '@yukilabs/agnostic-ui-core':
+        specifier: workspace:*
+        version: link:../core
+      '@yukilabs/agnostic-ui-engine':
+        specifier: workspace:*
+        version: link:../engine
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.15
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.15)
+      '@vitest/coverage-v8':
+        specifier: ^2.0.0
+        version: 2.1.9(vitest@2.1.9(@types/node@22.19.19))
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(postcss@8.5.15)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.19.19)
+
 packages:
 
   '@ampproject/remapping@2.3.0':
