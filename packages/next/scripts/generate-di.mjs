@@ -67,7 +67,8 @@ function renderTokens({ useCases, controllers }) {
   const all = [...useCases, ...controllers];
   return [
     HEADER,
-    `import type { InjectionToken } from 'tsyringe';`,
+    // No classes → no `InjectionToken` usage; omit the import to keep lint clean.
+    ...(all.length > 0 ? [`import type { InjectionToken } from 'tsyringe';`] : []),
     namedImport('import type', useCases, '../../../application/useCases'),
     namedImport('import type', controllers, '../../../interface/controllers'),
     '',
@@ -94,7 +95,7 @@ function renderRegistry({ useCases, controllers }) {
     ' * cada `resolve` constrói uma instância nova, então as dependências request-scoped',
     ' * (gateway, executionContext) resolvem do child container que iniciou o `resolve`.',
     ' */',
-    'export function registerGeneratedServices(container: DependencyContainer): void {',
+    `export function registerGeneratedServices(${all.length > 0 ? 'container' : '_container'}: DependencyContainer): void {`,
     all
       .map((name) => `  container.register(${toTokenName(name)}, { useClass: ${name} });`)
       .join('\n'),
