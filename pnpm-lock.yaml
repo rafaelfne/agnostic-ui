@@ -35,6 +35,9 @@ importers:
 
   apps/builder:
     dependencies:
+      '@yukilabs/agnostic-ui-engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       react:
         specifier: ^19.2.6
         version: 19.2.6
