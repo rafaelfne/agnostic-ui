@@ -14,5 +14,6 @@ export default defineConfig({
     'react/jsx-dev-runtime',
     '@yukilabs/agnostic-ui-core',
     '@yukilabs/agnostic-ui-engine',
+    'recharts',
   ],
 });
