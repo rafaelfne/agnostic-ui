@@ -211,10 +211,12 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   listar artefatos, listar versões, ler publicado, salvar draft (papel `editor`),
   publicar/rollback (papel `publisher`); o tenant vem da sessão verificada, nunca
   de header. Store estendido com `listArtifacts` e `publishArtifactVersion`
-  (publish multi-kind fail-closed). **Onda E.2 em andamento:** o SPA `apps/builder`
-  (primeiro `apps/*`; Vite/React + react-router) — cliente HTTP tipado da API,
-  login Supabase (GoTrue REST, sem SDK) com rota protegida fail-closed e lista de
-  artefatos por tenant. **Pendente:** editor de flow, editor de telas SDUI, wizard
+  (publish multi-kind fail-closed). **Ondas E.2/E.3 entregues:** o SPA `apps/builder`
+  (primeiro `apps/*`; Vite/React + react-router) — cliente HTTP tipado da API, login
+  Supabase (GoTrue REST, sem SDK) com rota protegida fail-closed, lista de artefatos
+  e **editor de flow** (campos + steps com forms tipados por op — JSON para
+  compose-template/branch; validação client-side pelo `FlowDefinitionSchema`;
+  salvar rascunho + publicar/rollback). **Pendente:** editor de telas SDUI, wizard
   de integração e simular ao vivo (FlowEngine client do pacote `react`).
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por
   schema, authz, migração de schema de config, trace de execução.
