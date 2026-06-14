@@ -152,14 +152,15 @@ Mapeamento de erro → HTTP:
 
 ## Monorepo
 
-**Turborepo + pnpm.** Workspaces em `packages/*` (e `apps/*` no futuro).
+**Turborepo + pnpm.** Workspaces em `packages/*` e `apps/*`.
 
-| Pacote                         | Papel                                                                                                                                                                 | Estado                        |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `@yukilabs/agnostic-ui-core`   | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge                                                                                    | Pronto (Fase 0)               |
-| `@yukilabs/agnostic-ui-next`   | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store + **API do builder** (`/api/builder/*` sobre `IConfigStore`, gated por `IAuthz`) | Fase C concluída; builder E.1 |
-| `@yukilabs/agnostic-ui-engine` | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura                                                                              | **Em construção (Fase A)**    |
-| `@yukilabs/agnostic-ui-react`  | Renderer SDUI (registry + data-binding), FlowEngine client (`useFlow`/`FlowScreen`) e providers de tema/sandbox                                                       | Fase D concluída              |
+| Pacote                          | Papel                                                                                                                                                                 | Estado                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `@yukilabs/agnostic-ui-core`    | Shared kernel: contratos, schemas (Zod), parser de marker/JWT, protocolo do bridge                                                                                    | Pronto (Fase 0)               |
+| `@yukilabs/agnostic-ui-next`    | BFF Next.js: **host do runtime** (catch-all dirige flows pelo engine) + config store + **API do builder** (`/api/builder/*` sobre `IConfigStore`, gated por `IAuthz`) | Fase C concluída; builder E.1 |
+| `@yukilabs/agnostic-ui-engine`  | Engine agnóstico: schemas de config, interpretador de flow, operadores, expressão segura                                                                              | **Em construção (Fase A)**    |
+| `@yukilabs/agnostic-ui-react`   | Renderer SDUI (registry + data-binding), FlowEngine client (`useFlow`/`FlowScreen`) e providers de tema/sandbox                                                       | Fase D concluída              |
+| `@yukilabs/agnostic-ui-builder` | **SPA no-code** (Vite/React, `apps/builder`): consome a API do builder; login Supabase + lista de artefatos                                                           | Em construção (Fase E.2)      |
 
 SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven) implementam o **contrato
 do bridge** definido no `core` — adiados, mas o contrato já vive aqui.
@@ -210,9 +211,11 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
   listar artefatos, listar versões, ler publicado, salvar draft (papel `editor`),
   publicar/rollback (papel `publisher`); o tenant vem da sessão verificada, nunca
   de header. Store estendido com `listArtifacts` e `publishArtifactVersion`
-  (publish multi-kind fail-closed). **Pendente:** o SPA Vite/React (E.2+) — editor
-  de flow, editor de telas SDUI, wizard de integração e simular ao vivo (FlowEngine
-  client do pacote `react`).
+  (publish multi-kind fail-closed). **Onda E.2 em andamento:** o SPA `apps/builder`
+  (primeiro `apps/*`; Vite/React + react-router) — cliente HTTP tipado da API,
+  login Supabase (GoTrue REST, sem SDK) com rota protegida fail-closed e lista de
+  artefatos por tenant. **Pendente:** editor de flow, editor de telas SDUI, wizard
+  de integração e simular ao vivo (FlowEngine client do pacote `react`).
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por
   schema, authz, migração de schema de config, trace de execução.
 
