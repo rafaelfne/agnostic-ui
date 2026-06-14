@@ -10,6 +10,8 @@ export interface ArtifactSummary {
   createdAt: string;
   latestVersion: number;
   publishedVersion: number | null;
+  /** ISO timestamp of when the published version was published, or `null`. */
+  publishedAt: string | null;
 }
 
 export interface ArtifactVersion {
