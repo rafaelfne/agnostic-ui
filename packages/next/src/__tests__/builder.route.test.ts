@@ -99,6 +99,7 @@ describe('builder API — artifact lifecycle', () => {
         createdAt: expect.any(String),
         latestVersion: 1,
         publishedVersion: null,
+        publishedAt: null,
       },
     ]);
 

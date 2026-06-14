@@ -50,6 +50,7 @@ describe('DrizzleConfigStore.listArtifacts', () => {
         createdAt: expect.any(Date),
         latestVersion: 1,
         publishedVersion: null,
+        publishedAt: null,
       },
       {
         kind: 'screen',
@@ -57,6 +58,7 @@ describe('DrizzleConfigStore.listArtifacts', () => {
         createdAt: expect.any(Date),
         latestVersion: 2,
         publishedVersion: 1,
+        publishedAt: expect.any(Date),
       },
     ]);
 

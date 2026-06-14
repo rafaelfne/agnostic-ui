@@ -31,6 +31,8 @@ export interface ConfigArtifactSummary {
   latestVersion: number;
   /** Currently published version number, or `null` when none is published. */
   publishedVersion: number | null;
+  /** When the published version was published, or `null` when none is published. */
+  publishedAt: Date | null;
 }
 
 export interface IConfigStore {

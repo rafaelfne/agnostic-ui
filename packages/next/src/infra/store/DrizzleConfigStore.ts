@@ -127,6 +127,7 @@ export class DrizzleConfigStore implements IConfigStore {
           publishedVersion: sql<
             number | null
           >`max(${configVersion.version}) filter (where ${configVersion.status} = 'published')`,
+          publishedAt: sql<Date | null>`max(${configVersion.publishedAt}) filter (where ${configVersion.status} = 'published')`,
         })
         .from(configArtifact)
         .leftJoin(configVersion, eq(configVersion.artifactId, configArtifact.id))
@@ -148,6 +149,7 @@ export class DrizzleConfigStore implements IConfigStore {
         createdAt: row.createdAt,
         latestVersion: Number(row.latestVersion),
         publishedVersion: row.publishedVersion === null ? null : Number(row.publishedVersion),
+        publishedAt: row.publishedAt === null ? null : new Date(row.publishedAt),
       }));
     });
   }
