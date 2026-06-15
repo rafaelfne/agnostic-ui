@@ -6,6 +6,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -26,10 +27,17 @@ export function ArtifactsByTypeChart({
 }): ReactElement {
   return (
     <ResponsiveContainer width="100%" height={210}>
-      <BarChart data={data} margin={{ top: 14, right: 8, left: -16, bottom: 0 }}>
+      <BarChart data={data} margin={{ top: 24, right: 8, left: -16, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 4" stroke="var(--border)" vertical={false} />
         <XAxis dataKey="type" tickLine={false} axisLine={false} tick={AXIS} />
-        <YAxis tickLine={false} axisLine={false} tick={AXIS} allowDecimals={false} />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          tick={AXIS}
+          allowDecimals={false}
+          domain={[0, (max: number) => max + 1]}
+          tickCount={6}
+        />
         <Tooltip
           cursor={{ fill: 'var(--muted)', opacity: 0.5 }}
           contentStyle={{
@@ -39,7 +47,14 @@ export function ArtifactsByTypeChart({
             fontSize: 12,
           }}
         />
-        <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+        <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={56}>
+          <LabelList
+            dataKey="count"
+            position="top"
+            fill="var(--foreground)"
+            fontSize={13}
+            fontWeight={600}
+          />
           {data.map((_, i) => (
             <Cell key={i} fill={`var(--chart-${(i % 5) + 1})`} />
           ))}
