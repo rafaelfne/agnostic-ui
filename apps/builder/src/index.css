@@ -40,7 +40,7 @@
 
   /* Recharts palette */
   --chart-1: oklch(0.58 0.19 281);
-  --chart-2: oklch(0.55 0.16 220);
+  --chart-2: oklch(0.58 0.16 247);
   --chart-3: oklch(0.6 0.15 152);
   --chart-4: oklch(0.7 0.14 70);
   --chart-5: oklch(0.58 0.18 330);
@@ -82,7 +82,7 @@
   --warning-foreground: oklch(0.16 0.02 281);
 
   --chart-1: oklch(0.66 0.19 281);
-  --chart-2: oklch(0.62 0.15 220);
+  --chart-2: oklch(0.64 0.16 247);
   --chart-3: oklch(0.7 0.15 152);
   --chart-4: oklch(0.78 0.14 70);
   --chart-5: oklch(0.66 0.17 330);
