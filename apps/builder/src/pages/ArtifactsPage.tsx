@@ -226,14 +226,9 @@ function DashboardBody({
 
       <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
         <Card className="p-4.5">
-          <div className="mb-1 flex items-start justify-between px-1.5 pt-1.5">
-            <div>
-              <h3 className="text-[15px] font-semibold">{t('dash.chartTypeTitle')}</h3>
-              <p className="text-[12.5px] text-muted-foreground">{t('dash.chartTypeSub')}</p>
-            </div>
-            <Badge variant="outline" className="font-mono">
-              Recharts · Bar
-            </Badge>
+          <div className="mb-1 px-1.5 pt-1.5">
+            <h3 className="text-[15px] font-semibold">{t('dash.chartTypeTitle')}</h3>
+            <p className="text-[12.5px] text-muted-foreground">{t('dash.chartTypeSub')}</p>
           </div>
           <ArtifactsByTypeChart data={byType} />
         </Card>
@@ -262,7 +257,7 @@ function DashboardBody({
               <li className="flex items-center gap-2">
                 <span
                   className="size-2.5 rounded-full"
-                  style={{ background: 'var(--muted-foreground)' }}
+                  style={{ background: 'var(--chart-muted)' }}
                 />
                 <span className="font-semibold tabular-nums">{drafts}</span>
                 <span className="text-muted-foreground">{t('dash.statDrafts')}</span>
@@ -273,14 +268,9 @@ function DashboardBody({
       </div>
 
       <Card className="p-4.5">
-        <div className="mb-1 flex items-start justify-between px-1.5 pt-1.5">
-          <div>
-            <h3 className="text-[15px] font-semibold">{t('dash.chartAreaTitle')}</h3>
-            <p className="text-[12.5px] text-muted-foreground">{t('dash.chartAreaSub')}</p>
-          </div>
-          <Badge variant="outline" className="font-mono">
-            Recharts · Area
-          </Badge>
+        <div className="mb-1 px-1.5 pt-1.5">
+          <h3 className="text-[15px] font-semibold">{t('dash.chartAreaTitle')}</h3>
+          <p className="text-[12.5px] text-muted-foreground">{t('dash.chartAreaSub')}</p>
         </div>
         <PublishActivityChart data={publishes7d} />
       </Card>

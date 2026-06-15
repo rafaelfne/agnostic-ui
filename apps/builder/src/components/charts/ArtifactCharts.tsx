@@ -75,7 +75,7 @@ export function PublicationChart({
   const { t } = useI18n();
   const data = [
     { name: t('dash.statPublished'), value: published, fill: 'var(--success)' },
-    { name: t('dash.statDrafts'), value: drafts, fill: 'var(--muted-foreground)' },
+    { name: t('dash.statDrafts'), value: drafts, fill: 'var(--chart-muted)' },
   ];
   return (
     <ResponsiveContainer width="100%" height={210}>
