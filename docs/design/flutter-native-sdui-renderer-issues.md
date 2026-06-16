@@ -21,6 +21,7 @@ contra `main` quando todas as features mergearem no épico.
 
 ```
 F1 (scaffold+contrato)  ──► tudo
+F1.A (contrato→manual)  ──► F2 (binding rico + documento SDUI + vetores)
 F2 (engine+slice)       ──► F3, F4, F6, F7, F8, F9
 F5 (BFF doc+client)     ──► dados reais (componentes podem usar mock antes)
 F3,F4 ──► F9 (refresh/exception usam dispatcher+bridge)
@@ -44,6 +45,29 @@ de drift. Sem UI ainda.
 - `#F1.6` test: harness de **vetores de conformance** no `core` + runner Dart (esqueleto).
 
 PR `#F1` → épico. Fechar manual: `#F1.1`–`#F1.6` + `#F1`.
+
+---
+
+## F1.A · Contrato rumo ao manual — core/engine  (fundacional, NOVO)
+
+`#F1.A` — Branch: `feat/F1A-contrato-rumo-manual` · base: `epic/E-...` · dep: F1
+Objetivo: estender o contrato no `core`/`engine` para o alvo do manual (binding rico
++ documento SDUI), de onde os **dois** renderers passam a consumir. Mantém a restrição
+**no-eval / registry de funções fechado** da
+[ADR 0002 (meta-engine)](../adr/0002-meta-engine-config-runtime.md); pode virar
+mini-épico em `epic/45-meta-engine`.
+
+- `#F1.A.1` feat(engine): estender o avaliador de expressão — pipes/filtros (`currency`, `percent`, `date`, `uppercase`) locale-aware como **funções auditadas** (não `eval`).
+- `#F1.A.2` feat(engine): condicionais inline em `{{ ... }}` (`&&`/`||`/`!`/igualdade) no parser.
+- `#F1.A.3` feat(engine): operador **`foreach`**/`dataBind` com escopo `$item`/`$index` (declarado em `step.ts`, falta implementar em `operators/`).
+- `#F1.A.4` feat(core): **documento SDUI** reconciliado com `ScreenDef` (`templateId`/`version`/`layout`/`context`/`refresh?`/`exception?`) — schema único.
+- `#F1.A.5` feat(core): **corpus de vetores de conformance** (template+contexto → árvore) + runner Vitest; `defaultRegistry`/`shadcnRegistry` do React acompanham a gramática.
+- `#F1.A.6` feat(core): contrato de **ações** (`ButtonEvent`/navegação) compartilhado pelos dois renderers.
+
+PR `#F1.A` → épico. Fechar manual: `#F1.A.1`–`#F1.A.6` + `#F1.A`.
+
+> **Nota:** as sub-tarefas `#F2.1`–`#F2.3` (binding em Dart) passam a **espelhar** a
+> gramática definida aqui, em vez de redefini-la.
 
 ---
 

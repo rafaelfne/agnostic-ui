@@ -1,12 +1,55 @@
 # ADR 0005 — Renderer SDUI nativo em Flutter (coexistindo com o host de WebView)
 
-- **Status:** Proposto
+- **Status:** Proposto (revisado 2026-06-16 — ver "Nota de revisão" abaixo)
 - **Data:** 2026-06-15
-- **Contexto da fase:** nova frente nativa — renderer Flutter, paralela ao
-  `@yukilabs/agnostic-ui-react` (Fase 2). Pré-requisito no BFF (Fase 1+).
+- **Contexto da fase:** nova frente nativa — renderer Flutter, par do
+  `@yukilabs/agnostic-ui-react` (Fase D). Pré-requisito no BFF
+  (`@yukilabs/agnostic-ui-next`, Fases B/C).
 - **Camada afetada:** nova ponta nativa (Dart/Flutter), shared kernel
   (`@yukilabs/agnostic-ui-core`) e BFF (`@yukilabs/agnostic-ui-next`, novo
   endpoint de documento SDUI).
+- **Relacionado:** numerada **0005** (a `0002` é o meta-engine —
+  [0002-meta-engine-config-runtime.md](0002-meta-engine-config-runtime.md)); plano
+  em [flutter-native-sdui-renderer-plan.md](../design/flutter-native-sdui-renderer-plan.md).
+
+## Nota de revisão — reconciliação com o engine config-driven (2026-06-16)
+
+Esta ADR foi revisada contra o código atual antes de virar trabalho. Duas decisões
+de produto foram tomadas na revisão: **(a) o "manual técnico" é o alvo** — o catálogo
+completo (~40 tipos) e a gramática de binding rica são a meta; **(b) a frente arranca
+agora**, em paralelo às Fases B/E (o roadmap do CLAUDE.md a colocava pós-Fase F).
+
+Consequência: a frente **não** "espelha um contrato pronto" — ela **co-evolui o
+contrato** (`core`/`engine`/React) rumo ao manual, com o Flutter como consumidor de
+primeira classe ao lado do React. Onde o estado atual difere do que o manual (e este
+doc) assumem:
+
+- **Binding.** Hoje `{{ ... }}` resolve **só paths** (`packages/engine/src/expression/parse.ts`);
+  a gramática rica (pipes/filtros `currency`/`date`, condicionais inline, `dataBind`/loop)
+  **não existe** — é declaradamente fora de escopo da Fase A. Precisa ser **adicionada ao
+  engine** (operador `foreach` já declarado em `packages/engine/src/schemas/step.ts`, falta
+  implementar), mantendo a restrição **no-eval / registry de funções fechado** da
+  [ADR 0002](0002-meta-engine-config-runtime.md) §3.
+- **Catálogo.** O renderer React implementa hoje ~8 tipos (`screen/section/stack/heading/
+  text/button/image/chart`); os ~40 do manual **não existem** em renderer nenhum. Entram
+  **em lockstep** (engine + React-referência + Flutter + vetores + golden) por família.
+- **Conformance × paridade visual (dois eixos).** Os vetores de conformance
+  (`template+contexto → árvore resolvida`) são **dados, renderer-agnósticos** — não exigem
+  que o React desenhe os 40 widgets. A **paridade visual** é golden por-renderer; onde o
+  React não cobre o `type`, vale o DoD "paridade **ou** não-suportado explícito".
+- **Documento SDUI × `ScreenDef`.** O shape do §5 (`{templateId, version, layout, context,
+  refresh?, exception?}`) deve ser **reconciliado** com o `ScreenDef {id, route, root,
+  dataFlow}` já existente em `packages/engine/src/schemas/screen.ts` — um único schema no `core`.
+- **Dispatcher/FlowEngine/`ButtonEvent`.** Não existem no código (o cliente Fase D é
+  `useFlow`/`FlowScreen`). O modelo do plano §7 é **construído**, não portado; o contrato de
+  ações precisa ser formalizado no `core` para os dois renderers compartilharem.
+- **Manual técnico** não está versionado no repo; o branch `fix/2-reconciliar-core-manual`
+  mostra divergência deliberada — por isso "manual como alvo" implica trabalho de contrato,
+  não só de Dart.
+
+Reflexo na quebra de issues: feature **F1.A (contrato rumo ao manual)** adicionada como
+fundacional, antes de F2 — ver
+[flutter-native-sdui-renderer-issues.md](../design/flutter-native-sdui-renderer-issues.md).
 
 ## Contexto
 

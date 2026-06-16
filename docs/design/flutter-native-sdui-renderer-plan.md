@@ -4,6 +4,11 @@
 > [ADR 0005](../adr/0005-flutter-native-sdui-renderer.md). Quebra em
 > épico/features/tarefas em
 > [flutter-native-sdui-renderer-issues.md](./flutter-native-sdui-renderer-issues.md).
+>
+> **Revisão 2026-06-16:** este plano descreve o **alvo** (catálogo + binding do
+> manual). Vários itens ainda não existem no engine/React e serão **co-evoluídos** —
+> ver "Nota de revisão" na [ADR 0005](../adr/0005-flutter-native-sdui-renderer.md) e a
+> feature **F1.A** adicionada na quebra de issues.
 
 ## 1. Objetivo e escopo
 
