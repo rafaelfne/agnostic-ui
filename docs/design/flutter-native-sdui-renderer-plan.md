@@ -30,12 +30,12 @@ SDKs iOS/Android nativos (SPM/Maven) — esta frente é Flutter/pub.dev.
 
 O princípio é: **contrato no `core` (uma fonte), runtime reimplementado em Dart**.
 
-| Categoria                          | Itens                                                                                                              | Onde vive / estratégia                                                                 |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **Reusado (contrato, neutro)**     | `TemplateNode`, documento SDUI, `Envelope`, `TenantConfig`, marker/JWT, vocabulário de `type`, semântica de binding, ações do FlowEngine, regra de exception, profiles de mock | `core` (TS/Zod) → **JSON Schema** → **codegen Dart** + **vetores de conformance**       |
-| **Reimplementado em Dart**         | parse → bind → compose (pipeline), os ~40 widgets, Dispatcher/FlowEngine runtime, theming, pull-to-refresh, navegação, cliente HTTP | `agnostic_ui_flutter` (+ binding em `agnostic_ui_contract`)                              |
-| **Muda de transporte (não de contrato)** | bridge: `postMessage` (WebView) → chamadas Dart in-process (nativo)                                          | `agnostic_ui_flutter` implementa a interface; `Envelope` continua o contrato            |
-| **Novo no BFF**                    | endpoint que devolve o **documento SDUI** cru por rota/tela                                                        | `@yukilabs/agnostic-ui-next` (pré-requisito); schema do documento formalizado no `core` |
+| Categoria                                | Itens                                                                                                                                                                          | Onde vive / estratégia                                                                  |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| **Reusado (contrato, neutro)**           | `TemplateNode`, documento SDUI, `Envelope`, `TenantConfig`, marker/JWT, vocabulário de `type`, semântica de binding, ações do FlowEngine, regra de exception, profiles de mock | `core` (TS/Zod) → **JSON Schema** → **codegen Dart** + **vetores de conformance**       |
+| **Reimplementado em Dart**               | parse → bind → compose (pipeline), os ~40 widgets, Dispatcher/FlowEngine runtime, theming, pull-to-refresh, navegação, cliente HTTP                                            | `agnostic_ui_flutter` (+ binding em `agnostic_ui_contract`)                             |
+| **Muda de transporte (não de contrato)** | bridge: `postMessage` (WebView) → chamadas Dart in-process (nativo)                                                                                                            | `agnostic_ui_flutter` implementa a interface; `Envelope` continua o contrato            |
+| **Novo no BFF**                          | endpoint que devolve o **documento SDUI** cru por rota/tela                                                                                                                    | `@yukilabs/agnostic-ui-next` (pré-requisito); schema do documento formalizado no `core` |
 
 A consequência prática: **o renderer React e o renderer Flutter são dois clientes
 do mesmo documento SDUI**. O BFF não sabe qual renderer está do outro lado.
@@ -117,12 +117,12 @@ A peça de lógica mais delicada — precisa casar **exatamente** com o renderer
 React (daí os vetores de conformance compartilhados). Mini-linguagem de expressão
 (não `eval`), com um tokenizer/parser próprio:
 
-| Recurso       | Exemplo                                  | Semântica                                            |
-| ------------- | ---------------------------------------- | ---------------------------------------------------- |
-| Path          | `{{ usuario.nome }}`                     | dot-notation sobre o `context` (map aninhado)        |
+| Recurso       | Exemplo                                      | Semântica                                            |
+| ------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Path          | `{{ usuario.nome }}`                         | dot-notation sobre o `context` (map aninhado)        |
 | Condicional   | `{{ validacao.success && usuario.premium }}` | booleano (`&&`, `\|\|`, `!`, igualdade) → `show`     |
-| Pipe / filtro | `{{ saldo \| currency('BRL') }}`         | registry de filtros extensível (`currency`, `date`…) |
-| Loop          | `dataBind: {{ portfolio.positions }}`    | gera N nós; escopo com `$item` e `$index`            |
+| Pipe / filtro | `{{ saldo \| currency('BRL') }}`             | registry de filtros extensível (`currency`, `date`…) |
+| Loop          | `dataBind: {{ portfolio.positions }}`        | gera N nós; escopo com `$item` e `$index`            |
 
 Decisões:
 
@@ -140,14 +140,14 @@ Decisões:
 dispatch, theme) → Widget`. Tipo desconhecido → `empty-state`/placeholder +
 telemetria (degradação graciosa). As ~40 famílias do manual (§4.5):
 
-| Família           | Tipos                                                                                                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Core UI           | `text`, `button`, `icon`, `input`, `row`, `container`                                                                        |
-| Cards             | `card-balance`, `category-card`, `product-card`, `portfolio-card`, `catalog-card`, `information-card`, `invest-card`, `product-performance-card` |
-| Headers           | `main-header`, `product-header`, `product-details-header`, `catalog-header`                                                  |
-| Listas            | `list`, `product-list`, `benefit-list`, `performance-list`                                                                   |
-| Especializados    | `window`, `tabs`, `pull-to-refresh`, `empty-state`, `exception-error`, `my-wallets-content`, `invest-amount`, `invest-review`, `portfolio-builder-catalog` |
-| Por tenant        | `partnerco-balance-card`, `partnerco-quick-actions`, … (overlay de registry por tenant)                                      |
+| Família        | Tipos                                                                                                                                                      |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core UI        | `text`, `button`, `icon`, `input`, `row`, `container`                                                                                                      |
+| Cards          | `card-balance`, `category-card`, `product-card`, `portfolio-card`, `catalog-card`, `information-card`, `invest-card`, `product-performance-card`           |
+| Headers        | `main-header`, `product-header`, `product-details-header`, `catalog-header`                                                                                |
+| Listas         | `list`, `product-list`, `benefit-list`, `performance-list`                                                                                                 |
+| Especializados | `window`, `tabs`, `pull-to-refresh`, `empty-state`, `exception-error`, `my-wallets-content`, `invest-amount`, `invest-review`, `portfolio-builder-catalog` |
+| Por tenant     | `partnerco-balance-card`, `partnerco-quick-actions`, … (overlay de registry por tenant)                                                                    |
 
 Adicionar componente (port do manual §9.2): criar o widget → (se reage a eventos)
 ligar ao dispatcher → registrar o `type` no composer → adicionar vetores de
@@ -172,13 +172,13 @@ Onde o web usa CustomEvents ouvidos por wrappers do React Router, o **nativo**
 mapeia os handlers do FlowEngine para a navegação Flutter (**GoRouter**
 recomendado):
 
-| Handler (manual)  | Web                          | Nativo (Flutter)                       |
-| ----------------- | ---------------------------- | -------------------------------------- |
-| `navigation`      | `dispatchEvent("sdui:navigate")` | `GoRouter.push(target)`             |
-| `navigateFlow`    | navega com prefixo            | `push` com prefixo de fluxo            |
-| `replaceCurrent`  | substitui último segmento     | `GoRouter.replace`                     |
-| `back`            | `dispatchEvent("sdui:back")`  | `GoRouter.pop`                         |
-| `refreshHomePage` | refresh da home               | dispara o `RefreshController` da home  |
+| Handler (manual)  | Web                              | Nativo (Flutter)                      |
+| ----------------- | -------------------------------- | ------------------------------------- |
+| `navigation`      | `dispatchEvent("sdui:navigate")` | `GoRouter.push(target)`               |
+| `navigateFlow`    | navega com prefixo               | `push` com prefixo de fluxo           |
+| `replaceCurrent`  | substitui último segmento        | `GoRouter.replace`                    |
+| `back`            | `dispatchEvent("sdui:back")`     | `GoRouter.pop`                        |
+| `refreshHomePage` | refresh da home                  | dispara o `RefreshController` da home |
 
 ## 8. Bridge nativa
 
@@ -245,23 +245,23 @@ cru. O renderer nativo depende disso. Trabalho no `next`:
 
 ## 13. Milestones
 
-| Milestone | Conteúdo                                                                                          | Saída                                  |
-| --------- | ------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **M0**    | Scaffold: melos + CI Dart, `agnostic_ui_contract`, codegen JSON Schema→Dart, check de drift       | Pacotes vazios buildando, contrato gerado |
-| **M1**    | Engine de binding + pipeline + registry core (6 componentes) + 1 tela ponta a ponta contra mock   | Slice vertical renderizando            |
-| **M2**    | Bridge nativa + Dispatcher/FlowEngine + `EmbedView(renderMode:)` + `SduiClient` + BFF doc endpoint | Navegação e dados reais                |
-| **M3**    | Catálogo: famílias Cards + Headers + Listas                                                        | ~22 componentes                        |
-| **M4**    | Especializados + pull-to-refresh + exception + theming + componentes por tenant                   | Catálogo completo                      |
-| **M5**    | Playground (Yuki Labs Playground), E2E, golden suite, publish no pub.dev                           | Pronto para distribuição               |
+| Milestone | Conteúdo                                                                                           | Saída                                     |
+| --------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **M0**    | Scaffold: melos + CI Dart, `agnostic_ui_contract`, codegen JSON Schema→Dart, check de drift        | Pacotes vazios buildando, contrato gerado |
+| **M1**    | Engine de binding + pipeline + registry core (6 componentes) + 1 tela ponta a ponta contra mock    | Slice vertical renderizando               |
+| **M2**    | Bridge nativa + Dispatcher/FlowEngine + `EmbedView(renderMode:)` + `SduiClient` + BFF doc endpoint | Navegação e dados reais                   |
+| **M3**    | Catálogo: famílias Cards + Headers + Listas                                                        | ~22 componentes                           |
+| **M4**    | Especializados + pull-to-refresh + exception + theming + componentes por tenant                    | Catálogo completo                         |
+| **M5**    | Playground (Yuki Labs Playground), E2E, golden suite, publish no pub.dev                           | Pronto para distribuição                  |
 
 O slice vertical (M1) é deliberadamente cedo — derisca o engine de binding e o
 pipeline antes de investir nos ~40 widgets.
 
 ## 14. Riscos e mitigação
 
-| Risco                                                              | Severidade | Mitigação                                                                       |
+| Risco                                                             | Severidade | Mitigação                                                                       |
 | ----------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------- |
-| Drift de contrato TS↔Dart                                         | Alta       | JSON Schema gerado + `gen:check` no CI + vetores de conformance                  |
+| Drift de contrato TS↔Dart                                         | Alta       | JSON Schema gerado + `gen:check` no CI + vetores de conformance                 |
 | Semântica de binding divergir do React                            | Alta       | Spec congelada no `core` + corpus golden rodado pelos dois renderers            |
 | BFF ainda não emite documento SDUI                                | Alta       | Tratado como pré-requisito em M2; schema do documento no `core` primeiro        |
 | ~40 componentes = escopo grande                                   | Média      | Registry + famílias incrementais + fallback gracioso (tela nunca quebra)        |

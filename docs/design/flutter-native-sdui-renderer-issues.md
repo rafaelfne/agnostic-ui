@@ -31,7 +31,7 @@ F10 (playground/publish) ──► por último
 
 ---
 
-## F1 · Scaffold Dart + contrato gerado  (M0)
+## F1 · Scaffold Dart + contrato gerado (M0)
 
 `#F1` — Branch: `feat/F1-dart-scaffold-contract` · base: `epic/E-...`
 Objetivo: monorepo Dart buildando e o contrato do `core` gerado em Dart com check
@@ -48,21 +48,22 @@ PR `#F1` → épico. Fechar manual: `#F1.1`–`#F1.6` + `#F1`.
 
 ---
 
-## F1.A · Contrato rumo ao manual — core/engine  (fundacional, NOVO)
+## F1.A · Contrato rumo ao manual — core/engine (fundacional, NOVO)
 
 `#F1.A` — Branch: `feat/F1A-contrato-rumo-manual` · base: `epic/E-...` · dep: F1
 Objetivo: estender o contrato no `core`/`engine` para o alvo do manual (binding rico
-+ documento SDUI), de onde os **dois** renderers passam a consumir. Mantém a restrição
-**no-eval / registry de funções fechado** da
-[ADR 0002 (meta-engine)](../adr/0002-meta-engine-config-runtime.md); pode virar
-mini-épico em `epic/45-meta-engine`.
 
-- `#F1.A.1` feat(engine): estender o avaliador de expressão — pipes/filtros (`currency`, `percent`, `date`, `uppercase`) locale-aware como **funções auditadas** (não `eval`).
-- `#F1.A.2` feat(engine): condicionais inline em `{{ ... }}` (`&&`/`||`/`!`/igualdade) no parser.
-- `#F1.A.3` feat(engine): operador **`foreach`**/`dataBind` com escopo `$item`/`$index` (declarado em `step.ts`, falta implementar em `operators/`).
-- `#F1.A.4` feat(core): **documento SDUI** reconciliado com `ScreenDef` (`templateId`/`version`/`layout`/`context`/`refresh?`/`exception?`) — schema único.
-- `#F1.A.5` feat(core): **corpus de vetores de conformance** (template+contexto → árvore) + runner Vitest; `defaultRegistry`/`shadcnRegistry` do React acompanham a gramática.
-- `#F1.A.6` feat(core): contrato de **ações** (`ButtonEvent`/navegação) compartilhado pelos dois renderers.
+- documento SDUI), de onde os **dois** renderers passam a consumir. Mantém a restrição
+  **no-eval / registry de funções fechado** da
+  [ADR 0002 (meta-engine)](../adr/0002-meta-engine-config-runtime.md); pode virar
+  mini-épico em `epic/45-meta-engine`.
+
+* `#F1.A.1` feat(engine): estender o avaliador de expressão — pipes/filtros (`currency`, `percent`, `date`, `uppercase`) locale-aware como **funções auditadas** (não `eval`).
+* `#F1.A.2` feat(engine): condicionais inline em `{{ ... }}` (`&&`/`||`/`!`/igualdade) no parser.
+* `#F1.A.3` feat(engine): operador **`foreach`**/`dataBind` com escopo `$item`/`$index` (declarado em `step.ts`, falta implementar em `operators/`).
+* `#F1.A.4` feat(core): **documento SDUI** reconciliado com `ScreenDef` (`templateId`/`version`/`layout`/`context`/`refresh?`/`exception?`) — schema único.
+* `#F1.A.5` feat(core): **corpus de vetores de conformance** (template+contexto → árvore) + runner Vitest; `defaultRegistry`/`shadcnRegistry` do React acompanham a gramática.
+* `#F1.A.6` feat(core): contrato de **ações** (`ButtonEvent`/navegação) compartilhado pelos dois renderers.
 
 PR `#F1.A` → épico. Fechar manual: `#F1.A.1`–`#F1.A.6` + `#F1.A`.
 
@@ -71,7 +72,7 @@ PR `#F1.A` → épico. Fechar manual: `#F1.A.1`–`#F1.A.6` + `#F1.A`.
 
 ---
 
-## F2 · Engine de binding + pipeline + Core UI + slice vertical  (M1)
+## F2 · Engine de binding + pipeline + Core UI + slice vertical (M1)
 
 `#F2` — Branch: `feat/F2-binding-pipeline-core` · base: `epic/E-...`
 Objetivo: 1 tela real renderizando ponta a ponta contra um documento mock.
@@ -89,7 +90,7 @@ PR `#F2` → épico. Fechar manual: `#F2.1`–`#F2.8` + `#F2`.
 
 ---
 
-## F3 · Bridge nativa + EmbedView(renderMode)  (M2)
+## F3 · Bridge nativa + EmbedView(renderMode) (M2)
 
 `#F3` — Branch: `feat/F3-native-bridge-embedview` · base: `epic/E-...` · dep: F1
 Objetivo: bridge in-process e a `EmbedView` unificada.
@@ -105,7 +106,7 @@ PR `#F3` → épico. Fechar manual: `#F3.1`–`#F3.6` + `#F3`.
 
 ---
 
-## F4 · Dispatcher + FlowEngine + navegação  (M2)
+## F4 · Dispatcher + FlowEngine + navegação (M2)
 
 `#F4` — Branch: `feat/F4-dispatcher-flowengine` · base: `epic/E-...` · dep: F2
 Objetivo: ações de UI e navegação nativa.
@@ -119,7 +120,7 @@ PR `#F4` → épico. Fechar manual: `#F4.1`–`#F4.4` + `#F4`.
 
 ---
 
-## F5 · BFF documento SDUI + SduiClient  (M2)  ⚠️ cross-package
+## F5 · BFF documento SDUI + SduiClient (M2) ⚠️ cross-package
 
 `#F5` — Branch: `feat/F5-bff-sdui-document` · base: `epic/E-...`
 Objetivo: o BFF passa a **emitir o documento SDUI** e o Dart sabe buscá-lo.
@@ -139,7 +140,7 @@ PR `#F5` → épico. Fechar manual: `#F5.1`–`#F5.4` + `#F5`.
 
 ---
 
-## F6 · Catálogo — família Cards  (M3)
+## F6 · Catálogo — família Cards (M3)
 
 `#F6` — Branch: `feat/F6-catalog-cards` · base: `epic/E-...` · dep: F2
 Um commit por componente + vetores.
@@ -152,7 +153,7 @@ PR `#F6` → épico. Fechar manual: `#F6.1`–`#F6.9` + `#F6`.
 
 ---
 
-## F7 · Catálogo — Headers + Listas  (M3)
+## F7 · Catálogo — Headers + Listas (M3)
 
 `#F7` — Branch: `feat/F7-catalog-headers-lists` · base: `epic/E-...` · dep: F2
 
@@ -164,7 +165,7 @@ PR `#F7` → épico. Fechar manual: `#F7.1`–`#F7.9` + `#F7`.
 
 ---
 
-## F8 · Catálogo — Especializados  (M4)
+## F8 · Catálogo — Especializados (M4)
 
 `#F8` — Branch: `feat/F8-catalog-specialized` · base: `epic/E-...` · dep: F2, F4
 
@@ -176,7 +177,7 @@ PR `#F8` → épico. Fechar manual: `#F8.1`–`#F8.8` + `#F8`.
 
 ---
 
-## F9 · Pull-to-refresh + Exception + Theming + por tenant  (M4)
+## F9 · Pull-to-refresh + Exception + Theming + por tenant (M4)
 
 `#F9` — Branch: `feat/F9-refresh-exception-theming` · base: `epic/E-...` · dep: F3, F4, F5
 
@@ -190,7 +191,7 @@ PR `#F9` → épico. Fechar manual: `#F9.1`–`#F9.5` + `#F9`.
 
 ---
 
-## F10 · Playground + E2E + publish  (M5)
+## F10 · Playground + E2E + publish (M5)
 
 `#F10` — Branch: `feat/F10-playground-e2e-publish` · base: `epic/E-...` · dep: todas
 

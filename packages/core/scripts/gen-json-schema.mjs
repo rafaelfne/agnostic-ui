@@ -15,11 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import {
-  EnvelopeSchema,
-  TemplateNodeSchema,
-  TenantConfigSchema,
-} from '../dist/index.js';
+import { EnvelopeSchema, TemplateNodeSchema, TenantConfigSchema } from '../dist/index.js';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(scriptDir, '..');
