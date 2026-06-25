@@ -1,0 +1,25 @@
+# Host de WebView do manual (§14.3), estendido com o switch `renderMode` para,
+# no modo nativo, montar o TemplateRenderer em vez do WebView (ADR 0005 §1/§3).
+# Publicado no pub.dev na Fase F10.
+name: agnostic_ui_sdk
+description: >-
+  Agnostic UI host SDK: the EmbedView WebView host extended with a renderMode
+  switch that mounts the native Flutter renderer instead of a WebView.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.24.0'
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  agnostic_ui_contract: any
+  agnostic_ui_flutter: any
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter

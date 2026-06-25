@@ -1,0 +1,18 @@
+# Espelho Dart do shared kernel (@yukilabs/agnostic-ui-core). Dart puro, sem
+# Flutter: modelos de contrato gerados do JSON Schema, validação e o
+# interpretador de data-binding (ADR 0005 §3). Publicado no pub.dev na Fase F10.
+name: agnostic_ui_contract
+description: >-
+  Dart mirror of the Agnostic UI shared kernel: SDUI contract models generated
+  from the core JSON Schema, structural validation, and the data-binding
+  interpreter. Pure Dart, no Flutter dependency.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+resolution: workspace
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.25.0
