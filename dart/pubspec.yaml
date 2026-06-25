@@ -22,6 +22,14 @@ melos:
       description: Análise estática (fatal em infos) de todos os pacotes.
       exec: dart analyze --fatal-infos .
 
+    generate:
+      description: Gera os modelos Dart de contrato a partir do JSON Schema do core.
+      run: dart run tool/generate_models.dart
+
+    generate:check:
+      description: Falha se os modelos gerados estiverem desatualizados (drift).
+      run: dart run tool/generate_models.dart --check
+
     test:
       description: Testes de todos os pacotes — `dart test` nos puros, `flutter test` nos Flutter.
       run: >-

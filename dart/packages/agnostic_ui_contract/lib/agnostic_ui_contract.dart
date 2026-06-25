@@ -6,3 +6,4 @@
 library;
 
 export 'src/contract_meta.dart';
+export 'src/generated/models.dart';
