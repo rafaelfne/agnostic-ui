@@ -1,0 +1,13 @@
+{
+  "name": "path-binding",
+  "description": "Binding de path simples: {{ user.name }} resolve do context.",
+  "template": {
+    "type": "text",
+    "props": { "value": "{{ user.name }}" }
+  },
+  "context": { "user": { "name": "Ada" } },
+  "expected": {
+    "type": "text",
+    "props": { "value": "Ada" }
+  }
+}
