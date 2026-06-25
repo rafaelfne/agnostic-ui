@@ -79,6 +79,7 @@ const PUNCTUATORS = [
   '>=',
   '&&',
   '||',
+  '|',
   '(',
   ')',
   ',',
@@ -173,11 +174,37 @@ class Parser {
   ) {}
 
   parse(): ExpressionNode {
-    const node = this.ternary();
+    const node = this.pipe();
     if (this.pos < this.tokens.length) {
       throw new ExpressionError(`unexpected trailing input in: ${this.src}`);
     }
     return node;
+  }
+
+  /** `value | fn` / `value | fn(args)` → `fn(value, ...args)`, left-associative. */
+  private pipe(): ExpressionNode {
+    let left = this.ternary();
+    while (this.matchPunct('|')) {
+      const t = this.peek();
+      if (!t || t.type !== 'ident') {
+        throw new ExpressionError(`expected a function after '|' in: ${this.src}`);
+      }
+      this.pos += 1;
+      if (!FUNCTION_NAMES.has(t.value)) {
+        throw new ExpressionError(`unknown function '${t.value}' in: ${this.src}`);
+      }
+      const args: ExpressionNode[] = [left];
+      if (this.matchPunct('(')) {
+        if (!this.matchPunct(')')) {
+          do {
+            args.push(this.ternary());
+          } while (this.matchPunct(','));
+          this.eatPunct(')');
+        }
+      }
+      left = { kind: 'call', fn: t.value as ExpressionFunction, args };
+    }
+    return left;
   }
 
   private peek(): Token | undefined {

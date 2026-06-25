@@ -2,12 +2,17 @@ import type { Scope } from '../context/flowContext';
 import { ExpressionError } from '../errors';
 import type { ExpressionNode, ExpressionOperator } from '../schemas/expression';
 
-import { CURATED_FUNCTIONS } from './functions';
+import { CURATED_FUNCTIONS, DEFAULT_LOCALE, type EvalContext } from './functions';
 import { toExpression } from './parse';
 import { readPath } from './safePath';
 
 /** Bound on AST nesting; expressions have no loops, so this caps total work. */
 const MAX_DEPTH = 64;
+
+/** Per-evaluation options. `locale` drives the formatting functions. */
+export interface EvalOptions {
+  readonly locale?: string;
+}
 
 const truthy = (value: unknown): boolean => Boolean(value);
 
@@ -26,9 +31,10 @@ function evalOp(
   op: ExpressionOperator,
   args: ExpressionNode[],
   scope: Scope,
+  ctx: EvalContext,
   depth: number,
 ): unknown {
-  const ev = (node: ExpressionNode): unknown => evaluate(node, scope, depth + 1);
+  const ev = (node: ExpressionNode): unknown => evalNode(node, scope, ctx, depth + 1);
 
   if (op === '!') return !truthy(ev(argAt(args, 0)));
   if (op === '&&') {
@@ -76,8 +82,7 @@ function evalOp(
   }
 }
 
-/** Evaluates a validated AST node against the scope. No `eval`, no globals, bounded. */
-export function evaluate(node: ExpressionNode, scope: Scope, depth = 0): unknown {
+function evalNode(node: ExpressionNode, scope: Scope, ctx: EvalContext, depth: number): unknown {
   if (depth > MAX_DEPTH) throw new ExpressionError('expression nesting too deep');
   switch (node.kind) {
     case 'lit':
@@ -85,21 +90,30 @@ export function evaluate(node: ExpressionNode, scope: Scope, depth = 0): unknown
     case 'path':
       return readPath(node.path, scope);
     case 'op':
-      return evalOp(node.op, node.args, scope, depth);
+      return evalOp(node.op, node.args, scope, ctx, depth);
     case 'cond':
-      return truthy(evaluate(node.if, scope, depth + 1))
-        ? evaluate(node.then, scope, depth + 1)
-        : evaluate(node.else, scope, depth + 1);
+      return truthy(evalNode(node.if, scope, ctx, depth + 1))
+        ? evalNode(node.then, scope, ctx, depth + 1)
+        : evalNode(node.else, scope, ctx, depth + 1);
     case 'call': {
       const fn = CURATED_FUNCTIONS[node.fn];
-      const callArgs = node.args.map((arg) => evaluate(arg, scope, depth + 1));
-      return fn(callArgs);
+      const callArgs = node.args.map((arg) => evalNode(arg, scope, ctx, depth + 1));
+      return fn(callArgs, ctx);
     }
   }
 }
 
-/** The evaluator the operators depend on: accepts a string placeholder or an AST node. */
-export type ExpressionEvaluator = (input: string | ExpressionNode, scope: Scope) => unknown;
+/** Evaluates a validated AST node against the scope. No `eval`, no globals, bounded. */
+export function evaluate(node: ExpressionNode, scope: Scope, options: EvalOptions = {}): unknown {
+  return evalNode(node, scope, { locale: options.locale ?? DEFAULT_LOCALE }, 0);
+}
 
-export const evaluateExpression: ExpressionEvaluator = (input, scope) =>
-  evaluate(toExpression(input), scope);
+/** The evaluator the operators depend on: accepts a string placeholder or an AST node. */
+export type ExpressionEvaluator = (
+  input: string | ExpressionNode,
+  scope: Scope,
+  options?: EvalOptions,
+) => unknown;
+
+export const evaluateExpression: ExpressionEvaluator = (input, scope, options) =>
+  evaluate(toExpression(input), scope, options);
