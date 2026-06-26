@@ -11,3 +11,4 @@ export 'src/binding/functions.dart' show EvalContext, defaultLocale;
 export 'src/binding/resolve_template.dart' show resolveTemplate;
 export 'src/contract_meta.dart';
 export 'src/generated/models.dart';
+export 'src/token/sandbox_marker.dart';
