@@ -10,12 +10,12 @@ import {
 import type { StepDef } from '../schemas';
 
 import {
+  type ContractRef,
   type OperatorContract,
-  type OperatorRef,
-  coreRef,
-  normalizeOpToRef,
-  refToString,
+  contractRefToString,
+  normalizeContractRef,
 } from './contract';
+import { coreOperatorContracts } from './coreContracts';
 
 /**
  * Handler alargado para a union inteira. O dispatch só o chama com um step cujo
@@ -39,7 +39,7 @@ export class GovernedOperatorRegistry {
   private readonly entries = new Map<string, GovernedOperatorEntry>();
 
   register<S extends StepDef>(contract: OperatorContract, handler: OperatorHandler<S>): void {
-    this.entries.set(refToString(contract.ref), {
+    this.entries.set(contractRefToString(contract.ref), {
       contract,
       // Seguro em runtime: o dispatch só invoca com o step do `op` registrado.
       handler: handler as unknown as GovernedHandler,
@@ -48,9 +48,9 @@ export class GovernedOperatorRegistry {
 
   /** Aceita `op` literal (`validate`) ou ref namespaced (`core.validate@1`). */
   resolve(opOrRef: string): GovernedOperatorEntry | undefined {
-    const ref: OperatorRef | undefined = normalizeOpToRef(opOrRef);
+    const ref: ContractRef | undefined = normalizeContractRef(opOrRef);
     if (ref === undefined) return undefined;
-    return this.entries.get(refToString(ref));
+    return this.entries.get(contractRefToString(ref));
   }
 
   has(opOrRef: string): boolean {
@@ -63,16 +63,16 @@ export class GovernedOperatorRegistry {
 }
 
 /**
- * Os 6 operadores atuais expressos como contratos `core.*@1`. Prova (G1) de que o
- * registry governado roda o vocabulário fechado de hoje sem tocar nos handlers.
+ * Os 6 operadores atuais expressos como contratos `core.*@1` (com I/O real, G2). Prova
+ * de que o registry governado roda o vocabulário fechado de hoje sem tocar nos handlers.
  */
 export function buildCoreGovernedRegistry(): GovernedOperatorRegistry {
   const registry = new GovernedOperatorRegistry();
-  registry.register({ ref: coreRef('validate') }, validateOperator);
-  registry.register({ ref: coreRef('call-integration') }, callIntegrationOperator);
-  registry.register({ ref: coreRef('compose-template') }, composeTemplateOperator);
-  registry.register({ ref: coreRef('branch') }, branchOperator);
-  registry.register({ ref: coreRef('emit-event') }, emitEventOperator);
-  registry.register({ ref: coreRef('foreach') }, foreachOperator);
+  registry.register(coreOperatorContracts.validate, validateOperator);
+  registry.register(coreOperatorContracts['call-integration'], callIntegrationOperator);
+  registry.register(coreOperatorContracts['compose-template'], composeTemplateOperator);
+  registry.register(coreOperatorContracts.branch, branchOperator);
+  registry.register(coreOperatorContracts['emit-event'], emitEventOperator);
+  registry.register(coreOperatorContracts.foreach, foreachOperator);
   return registry;
 }

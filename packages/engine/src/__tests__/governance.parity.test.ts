@@ -10,7 +10,7 @@ import {
   buildCoreGovernedRegistry,
   createGovernedDispatcher,
   dispatchGoverned,
-  refToString,
+  contractRefToString,
 } from '../governance';
 import { runFlow } from '../interpreter';
 import type { EngineServices } from '../operators';
@@ -47,6 +47,17 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
     });
     expect(registry.resolve('tenant.unknown@1')).toBeUndefined();
     expect(registry.resolve('Nope!')).toBeUndefined();
+  });
+
+  it('os contratos core carregam I/O e capabilities reais (G2)', () => {
+    const registry = buildCoreGovernedRegistry();
+    const validate = registry.resolve('validate')?.contract;
+    expect(validate?.capabilities.pure).toBe(true);
+    expect(validate?.input).toMatchObject({ type: 'object' });
+    expect(validate?.output).toMatchObject({ type: 'object' });
+    const call = registry.resolve('call-integration')?.contract;
+    expect(call?.capabilities.pure).toBe(false);
+    expect(call?.effects.writes).toContain('as');
   });
 
   const sandbox: ExecutionContext = {
@@ -147,11 +158,11 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
     expect(() => dispatchGoverned(unknownStep, context, registry)).toThrow(ConfigError);
   });
 
-  it('refToString formata o ref namespaced', () => {
-    expect(refToString({ namespace: 'core', name: 'validate', version: 1 })).toBe(
+  it('contractRefToString formata o ref namespaced', () => {
+    expect(contractRefToString({ namespace: 'core', name: 'validate', version: 1 })).toBe(
       'core.validate@1',
     );
-    expect(refToString({ namespace: 'acme', name: 'execute-transfer', version: 2 })).toBe(
+    expect(contractRefToString({ namespace: 'acme', name: 'execute-transfer', version: 2 })).toBe(
       'acme.execute-transfer@2',
     );
   });

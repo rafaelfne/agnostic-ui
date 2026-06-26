@@ -1,0 +1,112 @@
+{
+  "$comment": "AUTO-GERADO por scripts/gen-json-schema.mjs — não editar à mão. Rode `pnpm --filter @yukilabs/agnostic-ui-core gen:schema`.",
+  "$ref": "#/definitions/OperatorContract",
+  "definitions": {
+    "OperatorContract": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "version": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "namespace",
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "output": {
+          "$ref": "#/definitions/OperatorContract/properties/input"
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "pure": {
+              "type": "boolean",
+              "default": false
+            },
+            "integrations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "secrets": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "emits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        },
+        "effects": {
+          "type": "object",
+          "properties": {
+            "reads": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "writes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            },
+            "idempotent": {
+              "type": "boolean",
+              "default": true
+            },
+            "reversible": {
+              "type": "boolean",
+              "default": true
+            },
+            "compensation": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ref",
+        "input",
+        "output",
+        "capabilities",
+        "effects"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
