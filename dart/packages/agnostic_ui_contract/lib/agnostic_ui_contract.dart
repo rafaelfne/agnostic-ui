@@ -5,6 +5,7 @@
 /// resolução que torna o renderer nativo conforme aos vetores do core (ADR 0005).
 library;
 
+export 'src/action/action_def.dart';
 export 'src/binding/binding.dart' show evaluateExpression;
 export 'src/binding/errors.dart' show ExpressionError;
 export 'src/binding/functions.dart' show EvalContext, defaultLocale;
