@@ -62,6 +62,24 @@ class NativeBridge {
         meta: request.meta,
       );
 
+  int _seq = 0;
+
+  /// Conveniência: monta um envelope de request (origin `sdk`) e despacha o
+  /// método — usado pelo dispatcher para ações `bridge`.
+  Future<Envelope> call(String method, [Object? params]) {
+    _seq += 1;
+    return send(
+      Envelope(
+        id: '$method-$_seq',
+        origin: EnvelopeOrigin.sdk,
+        type: EnvelopeType.request,
+        method: method,
+        params: params,
+        meta: _meta,
+      ),
+    );
+  }
+
   /// O host nativo empurra um evento para o renderer.
   void emitEvent(String event, [Object? payload]) {
     _events.add(
