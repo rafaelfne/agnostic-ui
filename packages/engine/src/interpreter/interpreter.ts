@@ -8,6 +8,7 @@ import {
 import { ConfigError } from '../errors';
 import type { EmittedEvent, IEventBus } from '../events';
 import { evaluateExpression } from '../expression';
+import type { StepDispatcher } from '../governance';
 import {
   type EngineServices,
   type OperatorContext,
@@ -31,6 +32,12 @@ export interface RunFlowDeps {
   eventBus?: IEventBus;
   /** Resolves named schemas for `validate` steps that reference one. */
   schemas?: SchemaResolver;
+  /**
+   * @internal Seam strangler (ADR 0006, G1): troca o dispatch fechado (`switch`)
+   * pelo governado por contrato. Default = o `switch`, byte-idêntico. Some quando o
+   * governado virar o caminho (G3).
+   */
+  dispatcher?: StepDispatcher;
 }
 
 /** Validates the flow config up front; a bad artifact is a `config` error, not a crash. */
@@ -85,6 +92,8 @@ export async function runFlow(
   deps: RunFlowDeps,
 ): Promise<EngineResult> {
   const registry = buildDefaultRegistry();
+  const dispatcher: StepDispatcher =
+    deps.dispatcher ?? ((step, context) => dispatch(step, context, registry));
   const emitted: EmittedEvent[] = [];
   const eventBus: IEventBus = {
     emit: (event) => {
@@ -101,7 +110,7 @@ export async function runFlow(
     const runSteps = async (steps: StepDef[], target: FlowContext): Promise<void> => {
       for (const step of steps) {
         if (step.when !== undefined && !services.evaluate(step.when, buildScope(target))) continue;
-        await dispatch(step, { ctx: target, services, profile }, registry);
+        await dispatcher(step, { ctx: target, services, profile });
       }
     };
 
