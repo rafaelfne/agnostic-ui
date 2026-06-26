@@ -13,14 +13,7 @@ import {
   buildCoreGovernedRegistry,
   createGovernedDispatcher,
 } from '../governance';
-import {
-  type EngineServices,
-  type OperatorContext,
-  type OperatorRegistry,
-  type PreflightHook,
-  type SchemaResolver,
-  buildDefaultRegistry,
-} from '../operators';
+import { type EngineServices, type PreflightHook, type SchemaResolver } from '../operators';
 import type { IIntegrationRunner } from '../ports';
 import {
   type FlowDefinition,
@@ -43,8 +36,9 @@ export interface RunFlowDeps {
    */
   preflight?: PreflightHook;
   /**
-   * @internal Seam strangler (ADR 0006). Default = o registry **governado** (G3).
-   * Injete `createSwitchDispatcher()` para o `switch` fechado legado (mantido até G8).
+   * Dispatcher de steps. Default = o registry governado dos operadores `core.*`.
+   * Injete `createGovernedDispatcher(registry)` com um registry que inclua os
+   * operadores de **tenant** para rodar flows que os referenciam (ADR 0006).
    */
   dispatcher?: StepDispatcher;
 }
@@ -70,39 +64,7 @@ function extractInput(flow: FlowDefinition, input: EngineRunInput): Record<strin
   return picked;
 }
 
-/** Type-safe dispatch: each case narrows `step` to the operator's own shape. */
-function dispatch(
-  step: StepDef,
-  context: OperatorContext,
-  registry: OperatorRegistry,
-): Promise<void> | void {
-  switch (step.op) {
-    case 'validate':
-      return registry.validate(step, context);
-    case 'call-integration':
-      return registry['call-integration'](step, context);
-    case 'compose-template':
-      return registry['compose-template'](step, context);
-    case 'branch':
-      return registry.branch(step, context);
-    case 'emit-event':
-      return registry['emit-event'](step, context);
-  }
-}
-
-/**
- * Dispatcher legado pelo `switch` fechado + `buildDefaultRegistry`. O default do
- * runtime é o governado (`defaultDispatcher`, G3); este fica reachable para testes de
- * paridade e back-compat explícito, e sai em G8.
- *
- * @internal
- */
-export function createSwitchDispatcher(): StepDispatcher {
-  const registry = buildDefaultRegistry();
-  return (step, context) => dispatch(step, context, registry);
-}
-
-/** O caminho de dispatch padrão (G3): o registry governado por contrato. */
+/** O caminho de dispatch: o registry governado por contrato dos operadores `core.*`. */
 const defaultDispatcher: StepDispatcher = createGovernedDispatcher(buildCoreGovernedRegistry());
 
 /**

@@ -48,11 +48,3 @@ export type OperatorHandler<S extends StepDef> = (
   step: S,
   context: OperatorContext,
 ) => Promise<void> | void;
-
-/**
- * The fixed, audited operator set, keyed by `op`. A closed map (not dynamic
- * registration) is what makes the engine safe to run config without `eval`.
- */
-export type OperatorRegistry = {
-  readonly [Op in StepDef['op']]: OperatorHandler<Extract<StepDef, { op: Op }>>;
-};
