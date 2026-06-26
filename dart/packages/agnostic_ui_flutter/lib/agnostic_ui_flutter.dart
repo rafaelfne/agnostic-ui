@@ -36,4 +36,5 @@ export 'src/bridge/native_bridge.dart' show MethodHandler, NativeBridge;
 export 'src/core_components.dart' show createDefaultRegistry;
 export 'src/render_mode.dart';
 export 'src/sdui_registry.dart';
+export 'src/sdui_scope.dart' show SduiScope;
 export 'src/template_renderer.dart';

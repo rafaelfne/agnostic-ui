@@ -5,6 +5,8 @@ import 'cards.dart';
 import 'headers.dart';
 import 'lists.dart';
 import 'sdui_registry.dart';
+import 'sdui_scope.dart';
+import 'specialized.dart';
 
 /// Primitivos Core UI (F2.6): `text`, `button`, `icon`, `input`, `row`,
 /// `container`. Lêem as props já resolvidas (binding aplicado no
@@ -28,7 +30,10 @@ Widget _text(BuildContext context, TemplateNode node, List<Widget> children) =>
 Widget _button(BuildContext context, TemplateNode node, List<Widget> children) {
   final String label =
       node.props?['label']?.toString() ?? node.props?['text']?.toString() ?? '';
-  return ElevatedButton(onPressed: () {}, child: Text(label));
+  return ElevatedButton(
+    onPressed: nodeActionHandler(context, node),
+    child: Text(label),
+  );
 }
 
 Widget _icon(BuildContext context, TemplateNode node, List<Widget> children) =>
@@ -73,4 +78,5 @@ SduiRegistry createDefaultRegistry(
       ...cardComponents,
       ...headerComponents,
       ...listComponents,
+      ...specializedComponents,
     }, onUnknownType: onUnknownType);
