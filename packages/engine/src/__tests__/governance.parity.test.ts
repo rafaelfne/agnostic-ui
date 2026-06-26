@@ -144,7 +144,7 @@ describe('Frente G — registry governado (G1–G3)', () => {
     }
   });
 
-  it('ref não registrado → ConfigError (fail-closed)', () => {
+  it('ref não registrado → ConfigError (fail-closed)', async () => {
     const registry = buildCoreGovernedRegistry();
     const services: EngineServices = {
       integrationRunner: trivialRunner,
@@ -154,7 +154,7 @@ describe('Frente G — registry governado (G1–G3)', () => {
     };
     const context = { ctx: createFlowContext(live, {}), services, profile: undefined };
     const unknownStep = { op: 'tenant.nope@1' } as unknown as StepDef;
-    expect(() => dispatchGoverned(unknownStep, context, registry)).toThrow(ConfigError);
+    await expect(dispatchGoverned(unknownStep, context, registry)).rejects.toThrow(ConfigError);
   });
 
   it('um operador de tenant registrado despacha pelo governado (G3)', async () => {
