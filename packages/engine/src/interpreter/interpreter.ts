@@ -17,6 +17,7 @@ import {
   type EngineServices,
   type OperatorContext,
   type OperatorRegistry,
+  type PreflightHook,
   type SchemaResolver,
   buildDefaultRegistry,
 } from '../operators';
@@ -36,6 +37,11 @@ export interface RunFlowDeps {
   eventBus?: IEventBus;
   /** Resolves named schemas for `validate` steps that reference one. */
   schemas?: SchemaResolver;
+  /**
+   * Aprova ações `critical` (G5). Ausente → operadores críticos ficam bloqueados
+   * (fail-closed); o host obtém a confirmação humana e injeta o hook.
+   */
+  preflight?: PreflightHook;
   /**
    * @internal Seam strangler (ADR 0006). Default = o registry **governado** (G3).
    * Injete `createSwitchDispatcher()` para o `switch` fechado legado (mantido até G8).
@@ -136,6 +142,7 @@ export async function runFlow(
       evaluate: evaluateExpression,
       runSteps,
       schemas: deps.schemas,
+      preflight: deps.preflight,
     };
 
     await runSteps(parsed.steps, ctx);

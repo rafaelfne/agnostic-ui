@@ -21,4 +21,9 @@ export {
   coreContractRef,
   normalizeContractRef,
   parseContractRef,
+  type ReviewSummary,
+  type TrustTier,
+  deriveTrustTier,
+  formatReviewSummary,
+  reviewSummary,
 } from '@yukilabs/agnostic-ui-core';

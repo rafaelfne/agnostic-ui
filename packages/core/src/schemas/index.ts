@@ -4,3 +4,4 @@ export * from './document';
 export * from './action';
 export * from './operatorContract';
 export * from './componentContract';
+export * from './trustTier';
