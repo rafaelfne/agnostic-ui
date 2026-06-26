@@ -6,3 +6,7 @@ pnpm-lock.yaml
 next-env.d.ts
 docs/spikes
 drizzle
+packages/core/schema
+
+# Frente Dart/Flutter — toolchain separada (dart format / dart analyze)
+dart

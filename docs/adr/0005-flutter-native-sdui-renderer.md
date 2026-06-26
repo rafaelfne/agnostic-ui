@@ -31,15 +31,15 @@ doc) assumem:
   implementar), mantendo a restrição **no-eval / registry de funções fechado** da
   [ADR 0002](0002-meta-engine-config-runtime.md) §3.
 - **Catálogo.** O renderer React implementa hoje ~8 tipos (`screen/section/stack/heading/
-  text/button/image/chart`); os ~40 do manual **não existem** em renderer nenhum. Entram
+text/button/image/chart`); os ~40 do manual **não existem** em renderer nenhum. Entram
   **em lockstep** (engine + React-referência + Flutter + vetores + golden) por família.
 - **Conformance × paridade visual (dois eixos).** Os vetores de conformance
   (`template+contexto → árvore resolvida`) são **dados, renderer-agnósticos** — não exigem
   que o React desenhe os 40 widgets. A **paridade visual** é golden por-renderer; onde o
   React não cobre o `type`, vale o DoD "paridade **ou** não-suportado explícito".
 - **Documento SDUI × `ScreenDef`.** O shape do §5 (`{templateId, version, layout, context,
-  refresh?, exception?}`) deve ser **reconciliado** com o `ScreenDef {id, route, root,
-  dataFlow}` já existente em `packages/engine/src/schemas/screen.ts` — um único schema no `core`.
+refresh?, exception?}`) deve ser **reconciliado** com o `ScreenDef {id, route, root,
+dataFlow}` já existente em `packages/engine/src/schemas/screen.ts` — um único schema no `core`.
 - **Dispatcher/FlowEngine/`ButtonEvent`.** Não existem no código (o cliente Fase D é
   `useFlow`/`FlowScreen`). O modelo do plano §7 é **construído**, não portado; o contrato de
   ações precisa ser formalizado no `core` para os dois renderers compartilharem.
@@ -107,11 +107,11 @@ garantindo paridade semântica de data-binding e composição.
 
 ### 3. Três pacotes Dart, no **mesmo monorepo**
 
-| Pacote                  | Papel                                                                                  | Dep. de Flutter |
-| ----------------------- | -------------------------------------------------------------------------------------- | --------------- |
-| `agnostic_ui_contract`  | Modelos gerados + validação + interpretador de binding (espelho Dart do `core`)        | Não (Dart puro) |
-| `agnostic_ui_flutter`   | Renderer nativo: `TemplateRenderer`, registry de ~40 widgets, Dispatcher/FlowEngine    | Sim             |
-| `agnostic_ui_sdk`       | Host de WebView do manual, **estendido** com `renderMode` para plugar o renderer nativo | Sim             |
+| Pacote                 | Papel                                                                                   | Dep. de Flutter |
+| ---------------------- | --------------------------------------------------------------------------------------- | --------------- |
+| `agnostic_ui_contract` | Modelos gerados + validação + interpretador de binding (espelho Dart do `core`)         | Não (Dart puro) |
+| `agnostic_ui_flutter`  | Renderer nativo: `TemplateRenderer`, registry de ~40 widgets, Dispatcher/FlowEngine     | Sim             |
+| `agnostic_ui_sdk`      | Host de WebView do manual, **estendido** com `renderMode` para plugar o renderer nativo | Sim             |
 
 Ficam no **mesmo repositório** (manual §14.1 — monorepo para sincronizar
 contratos), sob um diretório Dart dedicado, orquestrado por **melos**; o CI do

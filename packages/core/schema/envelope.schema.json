@@ -1,0 +1,76 @@
+{
+  "$comment": "AUTO-GERADO por scripts/gen-json-schema.mjs — não editar à mão. Rode `pnpm --filter @yukilabs/agnostic-ui-core gen:schema`.",
+  "$ref": "#/definitions/Envelope",
+  "definitions": {
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "app",
+            "sdk"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "request",
+            "response",
+            "event",
+            "error"
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "params": {},
+        "result": {},
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "additionalProperties": false
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "bridgeVersion": {
+              "type": "string"
+            },
+            "tenantId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "bridgeVersion",
+            "tenantId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "origin",
+        "type",
+        "meta"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

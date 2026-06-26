@@ -1,0 +1,8 @@
+# Dart/Flutter — artefatos de build e resolução (pacotes de biblioteca não
+# versionam o lockfile).
+.dart_tool/
+.packages
+build/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
