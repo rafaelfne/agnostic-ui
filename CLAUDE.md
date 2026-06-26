@@ -221,7 +221,27 @@ Architecture, DI, gateways, multi-tenancy e hardening) estão **concluídas**.
 - **Fase F:** polimento no-code — construtor visual de expressões, formulários por
   schema, authz, migração de schema de config, trace de execução.
 
-Depois da Fase F: distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal
+#### Segunda virada — plataforma extensível dirigida por IA ([ADR 0006](docs/adr/0006-plataforma-extensivel-ia.md))
+
+Abre o **vocabulário fechado** (operadores + componentes) num modelo de extensão
+**governado por contrato, namespaced e sandboxed**, com a **IA como mais um editor
+de config** (prompt → proposta → mesmo portão fail-closed). Roadmap em
+[`docs/plano-virada-extensivel-ia.md`](docs/plano-virada-extensivel-ia.md);
+racional em [`docs/direcional-construtor-apps-ia.md`](docs/direcional-construtor-apps-ia.md).
+
+- **Fase G — Modelo de extensão:** `OperatorContract`/`ComponentContract` no `core`
+  (I/O em JSON Schema); registry de operadores governado/namespaced no `engine`
+  (strangler-fig sobre os 6 operadores atuais); grant + sandbox de capabilities
+  (reusa conectores/egress, sem socket cru); trust-tier derivado + review summary.
+- **Fase H — Conformância como spec:** eleva o corpus do `core` a especificação
+  pública + certificação; runner de conformância no React (gap atual), gate de
+  divergência cross-renderer, fixtures por contrato. **Co-urgente com o Flutter.**
+- **Fase I — IA como editor:** `prompt → proposta → portão`; port `ILlm` mockável;
+  triagem-primeiro; grounding tenant-scoped; diff de intenção no builder.
+- **Fase J — Governança & graduação:** RFC para `core.*`, certificação, distribuição
+  de extensões namespaced, migração de schema de contrato.
+
+Depois das Fases F/J: distribuição (CLI `create-agnostic-ui` self-hosted e/ou portal
 managed) e SDKs nativos (Flutter/pub.dev, iOS/SPM, Android/Maven), que implementam
 o contrato do bridge já definido no `core`.
 
