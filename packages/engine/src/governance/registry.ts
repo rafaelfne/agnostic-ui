@@ -1,3 +1,4 @@
+import { ConfigError } from '../errors';
 import {
   branchOperator,
   callIntegrationOperator,
@@ -9,6 +10,7 @@ import {
 } from '../operators';
 import type { StepDef } from '../schemas';
 
+import { certifyContract } from './conformance';
 import {
   type ContractRef,
   type OperatorContract,
@@ -46,6 +48,22 @@ export class GovernedOperatorRegistry {
     });
   }
 
+  /**
+   * Registro **fail-closed** (G7): recusa um contrato sem fixtures de conformância.
+   * A auditoria migra de `buildDefaultRegistry` para contrato + conformância + sandbox.
+   */
+  registerCertified<S extends StepDef>(
+    contract: OperatorContract,
+    handler: OperatorHandler<S>,
+  ): void {
+    if (!certifyContract(contract)) {
+      throw new ConfigError(
+        `operator ${contractRefToString(contract.ref)} has no conformance fixtures`,
+      );
+    }
+    this.register(contract, handler);
+  }
+
   /** Aceita `op` literal (`validate`) ou ref namespaced (`core.validate@1`). */
   resolve(opOrRef: string): GovernedOperatorEntry | undefined {
     const ref: ContractRef | undefined = normalizeContractRef(opOrRef);
@@ -68,11 +86,11 @@ export class GovernedOperatorRegistry {
  */
 export function buildCoreGovernedRegistry(): GovernedOperatorRegistry {
   const registry = new GovernedOperatorRegistry();
-  registry.register(coreOperatorContracts.validate, validateOperator);
-  registry.register(coreOperatorContracts['call-integration'], callIntegrationOperator);
-  registry.register(coreOperatorContracts['compose-template'], composeTemplateOperator);
-  registry.register(coreOperatorContracts.branch, branchOperator);
-  registry.register(coreOperatorContracts['emit-event'], emitEventOperator);
-  registry.register(coreOperatorContracts.foreach, foreachOperator);
+  registry.registerCertified(coreOperatorContracts.validate, validateOperator);
+  registry.registerCertified(coreOperatorContracts['call-integration'], callIntegrationOperator);
+  registry.registerCertified(coreOperatorContracts['compose-template'], composeTemplateOperator);
+  registry.registerCertified(coreOperatorContracts.branch, branchOperator);
+  registry.registerCertified(coreOperatorContracts['emit-event'], emitEventOperator);
+  registry.registerCertified(coreOperatorContracts.foreach, foreachOperator);
   return registry;
 }
