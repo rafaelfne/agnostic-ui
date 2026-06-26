@@ -32,6 +32,25 @@ class SduiException {
       };
 }
 
+/// Varre o `context` por um RequestResult `{ success: false }` e, se houver,
+/// produz a exceção que faz o renderer trocar para o template exception-error
+/// (manual §10). Semântica compartilhada com o renderer React (paridade F9).
+SduiException? detectException(Map<String, Object?> context) {
+  for (final Object? value in context.values) {
+    if (value is Map && value['success'] == false) {
+      final Object? error = value['error'];
+      final String? message = error is Map
+          ? error['message']?.toString()
+          : value['message']?.toString();
+      return SduiException(
+        code: 'request_failed',
+        message: message ?? 'Algo deu errado',
+      );
+    }
+  }
+  return null;
+}
+
 /// Documento SDUI de runtime que o BFF emite e o renderer nativo consome
 /// (ADR 0005 §5): o `root` (template ainda bindável) + o `context` (dados); o
 /// renderer resolve `{{ ... }}` de `root` contra `context`.
