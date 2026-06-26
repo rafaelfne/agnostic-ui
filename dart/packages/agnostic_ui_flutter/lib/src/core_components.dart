@@ -2,6 +2,8 @@ import 'package:agnostic_ui_contract/agnostic_ui_contract.dart';
 import 'package:flutter/material.dart';
 
 import 'cards.dart';
+import 'headers.dart';
+import 'lists.dart';
 import 'sdui_registry.dart';
 
 /// Primitivos Core UI (F2.6): `text`, `button`, `icon`, `input`, `row`,
@@ -69,4 +71,6 @@ SduiRegistry createDefaultRegistry(
     SduiRegistry(<String, SduiBuilder>{
       ...coreComponents,
       ...cardComponents,
+      ...headerComponents,
+      ...listComponents,
     }, onUnknownType: onUnknownType);
