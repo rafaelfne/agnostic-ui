@@ -47,12 +47,24 @@ export const OperatorEffectsSchema = z.object({
 });
 export type OperatorEffects = z.infer<typeof OperatorEffectsSchema>;
 
+/**
+ * Cada extensão traz seu próprio oráculo (ADR 0006 §8): IDs de fixtures de
+ * conformância. Em modo estrito o engine recusa carregar o não certificado; o
+ * harness (G7) roda as fixtures contra o handler vivo. Default vazio (não
+ * certificado) — o registry estrito (`registerCertified`) recusa contratos sem.
+ */
+export const ConformanceSchema = z.object({
+  fixtures: z.array(z.string()).default([]),
+});
+export type Conformance = z.infer<typeof ConformanceSchema>;
+
 export const OperatorContractSchema = z.object({
   ref: ContractRefSchema,
   input: JsonSchemaSchema,
   output: JsonSchemaSchema,
   capabilities: OperatorCapabilitiesSchema,
   effects: OperatorEffectsSchema,
+  conformance: ConformanceSchema.default({ fixtures: [] }),
 });
 export type OperatorContract = z.infer<typeof OperatorContractSchema>;
 

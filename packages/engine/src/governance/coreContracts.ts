@@ -18,6 +18,7 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'bag opcional sob `as`' },
     capabilities: { pure: true },
     effects: { reads: ['scope'], reversible: true, idempotent: true },
+    conformance: { fixtures: ['core/validate.ok', 'core/validate.missing'] },
   }),
   'call-integration': define({
     ref: coreContractRef('call-integration'),
@@ -25,6 +26,7 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'resultado da integração sob `as`' },
     capabilities: { pure: false },
     effects: { writes: ['as'], reversible: true, idempotent: true },
+    conformance: { fixtures: ['core/call-integration.ok'] },
   }),
   'compose-template': define({
     ref: coreContractRef('compose-template'),
@@ -32,6 +34,7 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'TemplateNode resolvido sob `as`' },
     capabilities: { pure: true },
     effects: { writes: ['as'], reversible: true, idempotent: true },
+    conformance: { fixtures: ['core/compose-template.ok'] },
   }),
   branch: define({
     ref: coreContractRef('branch'),
@@ -39,6 +42,7 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'sem saída própria; delega aos sub-steps' },
     capabilities: { pure: true },
     effects: { reversible: true, idempotent: true },
+    conformance: { fixtures: ['core/branch.ok'] },
   }),
   'emit-event': define({
     ref: coreContractRef('emit-event'),
@@ -46,6 +50,7 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'sem saída no escopo' },
     capabilities: { pure: false },
     effects: { reversible: true, idempotent: false },
+    conformance: { fixtures: ['core/emit-event.ok'] },
   }),
   foreach: define({
     ref: coreContractRef('foreach'),
@@ -53,5 +58,6 @@ export const coreOperatorContracts = {
     output: { type: 'object', description: 'array de bags por item sob `as`' },
     capabilities: { pure: true },
     effects: { writes: ['as'], reversible: true, idempotent: true },
+    conformance: { fixtures: ['core/foreach.ok'] },
   }),
 } satisfies Record<string, OperatorContract>;

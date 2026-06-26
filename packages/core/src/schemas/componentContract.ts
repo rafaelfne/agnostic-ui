@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-import { ContractRefSchema, type JsonSchema, JsonSchemaSchema } from './operatorContract';
+import {
+  ConformanceSchema,
+  ContractRefSchema,
+  type JsonSchema,
+  JsonSchemaSchema,
+} from './operatorContract';
 
 /**
  * Contrato de um componente (ADR 0006). O **props schema** é a interface nativa da
@@ -12,6 +17,7 @@ export const ComponentContractSchema = z.object({
   ref: ContractRefSchema,
   props: JsonSchemaSchema,
   renderOnly: z.literal(true),
+  conformance: ConformanceSchema.default({ fixtures: [] }),
 });
 export type ComponentContract = z.infer<typeof ComponentContractSchema>;
 

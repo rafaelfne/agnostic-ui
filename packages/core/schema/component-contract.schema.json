@@ -35,6 +35,22 @@
         "renderOnly": {
           "type": "boolean",
           "const": true
+        },
+        "conformance": {
+          "type": "object",
+          "properties": {
+            "fixtures": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "fixtures": []
+          }
         }
       },
       "required": [
