@@ -1,0 +1,19 @@
+{
+  "name": "nested-children",
+  "description": "Recursão pela árvore: binding resolve dentro de children.",
+  "template": {
+    "type": "card",
+    "children": [
+      { "type": "heading", "props": { "text": "{{ title }}" } },
+      { "type": "text", "props": { "value": "{{ body }}" } }
+    ]
+  },
+  "context": { "title": "Saldo", "body": "Disponível" },
+  "expected": {
+    "type": "card",
+    "children": [
+      { "type": "heading", "props": { "text": "Saldo" } },
+      { "type": "text", "props": { "value": "Disponível" } }
+    ]
+  }
+}

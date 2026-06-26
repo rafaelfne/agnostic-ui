@@ -2,6 +2,7 @@ import { branchOperator } from './branch';
 import { callIntegrationOperator } from './callIntegration';
 import { composeTemplateOperator } from './composeTemplate';
 import { emitEventOperator } from './emitEvent';
+import { foreachOperator } from './foreach';
 import type { OperatorRegistry } from './operator';
 import { validateOperator } from './validate';
 
@@ -11,6 +12,7 @@ export * from './callIntegration';
 export * from './composeTemplate';
 export * from './branch';
 export * from './emitEvent';
+export * from './foreach';
 
 /**
  * The single source of the operator set the engine can execute. There is no
@@ -24,5 +26,6 @@ export function buildDefaultRegistry(): OperatorRegistry {
     'compose-template': composeTemplateOperator,
     branch: branchOperator,
     'emit-event': emitEventOperator,
+    foreach: foreachOperator,
   };
 }

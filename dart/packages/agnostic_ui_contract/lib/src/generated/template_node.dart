@@ -9,6 +9,7 @@ class TemplateNode {
     this.props,
     this.body,
     this.children,
+    this.dataBind,
   });
 
   factory TemplateNode.fromJson(Map<String, Object?> json) => TemplateNode(
@@ -17,6 +18,7 @@ class TemplateNode {
     props: json['props'] == null ? null : (json['props']! as Map<String, Object?>).map((String k, Object? e) => MapEntry<String, Object?>(k, e)),
     body: json['body'] == null ? null : (json['body']! as List<Object?>).map((Object? e) => TemplateNode.fromJson(e as Map<String, Object?>)).toList(),
     children: json['children'] == null ? null : (json['children']! as List<Object?>).map((Object? e) => TemplateNode.fromJson(e as Map<String, Object?>)).toList(),
+    dataBind: json['dataBind'] == null ? null : json['dataBind']! as String,
   );
 
   final String type;
@@ -24,6 +26,7 @@ class TemplateNode {
   final Map<String, Object?>? props;
   final List<TemplateNode>? body;
   final List<TemplateNode>? children;
+  final String? dataBind;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'type': type,
@@ -31,6 +34,7 @@ class TemplateNode {
     if (props != null) 'props': props!.map((String k, Object? e) => MapEntry<String, Object?>(k, e)),
     if (body != null) 'body': body!.map((TemplateNode e) => e.toJson()).toList(),
     if (children != null) 'children': children!.map((TemplateNode e) => e.toJson()).toList(),
+    if (dataBind != null) 'dataBind': dataBind!,
   };
 }
 

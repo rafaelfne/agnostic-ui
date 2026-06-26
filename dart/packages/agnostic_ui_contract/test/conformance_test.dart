@@ -1,40 +1,53 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:agnostic_ui_contract/agnostic_ui_contract.dart';
 import 'package:test/test.dart';
 
-/// Runner de conformance (esqueleto, F1.6). Os vetores são compartilhados e
-/// vivem no core; aqui o Dart só valida que o corpus está bem-formado e é lido.
-/// A execução do binding (resolver template+context e comparar com `expected`)
-/// chega em F2.
+/// Runner de conformance do Dart (F2.8). Carrega os MESMOS vetores do core e
+/// EXECUTA o binding (resolveTemplate), comparando com `expected`. É a prova de
+/// paridade cross-renderer: o renderer nativo resolve idêntico ao oráculo TS.
 void main() {
   // `dart test` roda com cwd = raiz do pacote (dart/packages/agnostic_ui_contract).
   final Directory vectorsDir = Directory(
     '../../../packages/core/conformance/vectors',
   );
 
-  test('o corpus de conformance do core existe e é lido pelo Dart', () {
+  test('o corpus de conformance do core existe', () {
     expect(
       vectorsDir.existsSync(),
       isTrue,
       reason: 'esperado em ${vectorsDir.absolute.path}',
     );
-
-    final List<File> files = vectorsDir
-        .listSync()
-        .whereType<File>()
-        .where((File f) => f.path.endsWith('.json'))
-        .toList();
-    expect(files, isNotEmpty);
-
-    for (final File f in files) {
-      final Object? raw = jsonDecode(f.readAsStringSync());
-      expect(raw, isA<Map<String, Object?>>(), reason: f.path);
-      final Map<String, Object?> vector = raw! as Map<String, Object?>;
-      expect(vector['name'], isA<String>(), reason: f.path);
-      expect(vector['template'], isA<Map<String, Object?>>(), reason: f.path);
-      expect(vector['context'], isA<Map<String, Object?>>(), reason: f.path);
-      expect(vector['expected'], isA<Map<String, Object?>>(), reason: f.path);
-    }
   });
+
+  final List<File> files = vectorsDir.existsSync()
+      ? vectorsDir
+          .listSync()
+          .whereType<File>()
+          .where((File f) => f.path.endsWith('.json'))
+          .toList()
+      : <File>[];
+
+  for (final File file in files) {
+    final Map<String, Object?> raw =
+        jsonDecode(file.readAsStringSync()) as Map<String, Object?>;
+    final String name = raw['name']! as String;
+
+    test('conformance: $name (template + context → expected)', () {
+      final TemplateNode template = TemplateNode.fromJson(
+        raw['template']! as Map<String, Object?>,
+      );
+      final Map<String, Object?> context =
+          (raw['context']! as Map).cast<String, Object?>();
+      final String? locale = raw['locale'] as String?;
+
+      final TemplateNode resolved = resolveTemplate(
+        template,
+        context,
+        locale: locale,
+      );
+      expect(resolved.toJson(), equals(raw['expected']));
+    });
+  }
 }

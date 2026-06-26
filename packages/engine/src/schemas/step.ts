@@ -6,9 +6,10 @@ import { IdSchema, SchemaRefSchema } from './refs';
 
 /**
  * The closed, audited vocabulary of operations the engine can execute. This
- * discriminated union — not `eval` — is what keeps the system safe. Fase A ships
- * five operators; the rest (`transform`, `foreach`, `call-flow`, `delay`,
- * `guard`) come later. Every step may carry a `when` guard (falsy → skipped).
+ * discriminated union — not `eval` — is what keeps the system safe. Fase A shipped
+ * five operators; `foreach` is added in F1.A.3; the rest (`transform`,
+ * `call-flow`, `delay`, `guard`) come later. Every step may carry a `when` guard
+ * (falsy → skipped).
  */
 export type StepDef =
   | { op: 'validate'; require: string[]; schema?: string; as?: string; when?: Expression }
@@ -27,7 +28,8 @@ export type StepDef =
       else?: StepDef[];
       when?: Expression;
     }
-  | { op: 'emit-event'; event: string; payload?: Expression; when?: Expression };
+  | { op: 'emit-event'; event: string; payload?: Expression; when?: Expression }
+  | { op: 'foreach'; items: Expression; as: string; steps: StepDef[]; when?: Expression };
 
 export const StepDefSchema: z.ZodType<StepDef> = z.lazy(() =>
   z.discriminatedUnion('op', [
@@ -62,6 +64,13 @@ export const StepDefSchema: z.ZodType<StepDef> = z.lazy(() =>
       op: z.literal('emit-event'),
       event: IdSchema,
       payload: ExpressionSchema.optional(),
+      when: ExpressionSchema.optional(),
+    }),
+    z.object({
+      op: z.literal('foreach'),
+      items: ExpressionSchema,
+      as: IdSchema,
+      steps: z.array(StepDefSchema),
       when: ExpressionSchema.optional(),
     }),
   ]),

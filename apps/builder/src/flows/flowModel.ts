@@ -13,11 +13,12 @@ export const STEP_OPS = [
   'compose-template',
   'branch',
   'emit-event',
+  'foreach',
 ] as const;
 export type StepOp = (typeof STEP_OPS)[number];
 
 /** Ops whose shape is a tree/nested steps — edited as raw JSON until the Fase F builder. */
-export const RAW_STEP_OPS: readonly StepOp[] = ['compose-template', 'branch'];
+export const RAW_STEP_OPS: readonly StepOp[] = ['compose-template', 'branch', 'foreach'];
 
 export interface ValidationIssue {
   path: string;
@@ -50,6 +51,8 @@ export function emptyStep(op: StepOp): StepDef {
       return { op: 'branch', cases: [{ when: '{{ true }}', steps: [] }] };
     case 'emit-event':
       return { op: 'emit-event', event: 'something-happened' };
+    case 'foreach':
+      return { op: 'foreach', items: '{{ items }}', as: 'results', steps: [] };
   }
 }
 

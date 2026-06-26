@@ -1,0 +1,13 @@
+{
+  "name": "pipe-upper",
+  "description": "Pipe para função curada (sem locale, determinístico).",
+  "template": {
+    "type": "text",
+    "props": { "value": "{{ user.name | upper }}" }
+  },
+  "context": { "user": { "name": "Ada" } },
+  "expected": {
+    "type": "text",
+    "props": { "value": "ADA" }
+  }
+}
