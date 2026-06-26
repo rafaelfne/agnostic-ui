@@ -150,10 +150,17 @@ describe('branch', () => {
 });
 
 describe('buildDefaultRegistry', () => {
-  it('exposes exactly the five Fase A operators', () => {
+  it('exposes exactly the audited operator set', () => {
     const registry = buildDefaultRegistry();
     expect(Object.keys(registry).sort()).toEqual(
-      ['branch', 'call-integration', 'compose-template', 'emit-event', 'validate'].sort(),
+      [
+        'branch',
+        'call-integration',
+        'compose-template',
+        'emit-event',
+        'foreach',
+        'validate',
+      ].sort(),
     );
   });
 });
