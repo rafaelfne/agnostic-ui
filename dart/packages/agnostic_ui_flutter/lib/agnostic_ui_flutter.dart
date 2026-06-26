@@ -8,16 +8,25 @@ library;
 
 export 'package:agnostic_ui_contract/agnostic_ui_contract.dart'
     show
+        ActionDef,
+        BackAction,
+        BridgeAction,
         Envelope,
         EnvelopeError,
         EnvelopeMeta,
         EnvelopeOrigin,
         EnvelopeType,
+        NavigateAction,
+        NavigateFlowAction,
+        RefreshHomePageAction,
+        ReplaceCurrentAction,
         TemplateNode,
         resolveTemplate,
         evaluateExpression;
 
 export 'src/bridge/bridge_constants.dart';
+export 'src/dispatch/dispatcher.dart';
+export 'src/dispatch/navigation_delegate.dart';
 export 'src/bridge/default_handlers.dart' show defaultBridgeHandlers;
 export 'src/bridge/native_bridge.dart' show MethodHandler, NativeBridge;
 export 'src/core_components.dart' show createDefaultRegistry;
