@@ -1,5 +1,5 @@
 import type { ExecutionContext } from '@yukilabs/agnostic-ui-core';
-import { type FlowDefinitionInput, runFlow } from '@yukilabs/agnostic-ui-engine';
+import { type EngineResult, type FlowDefinitionInput, runFlow } from '@yukilabs/agnostic-ui-engine';
 
 import { ICORE_GATEWAY_TOKEN } from '../../application/ports';
 import { engineResultToResponse } from '../../interface/http/engineResponse';
@@ -17,22 +17,30 @@ import { EngineCoreIntegrationRunner } from './EngineCoreIntegrationRunner';
  * (`/api/[...path]`). Imports specific interface modules (not the `http` barrel) to
  * stay out of the DI boot cycle.
  */
-export async function runEngineFlow(
+export async function runFlowForRequest(
   request: Request,
   flow: FlowDefinitionInput,
   ctx: ExecutionContext,
   accessToken: string,
-): Promise<Response> {
+): Promise<EngineResult> {
   const query = Object.fromEntries(new URL(request.url).searchParams.entries());
   const body = request.method === 'POST' ? await readJsonBody(request) : {};
   const requestInput = { ...query, ...body, customerId: ctx.customerId };
 
   const container = createRequestContainer(ctx, accessToken);
   const gateway = container.resolve(ICORE_GATEWAY_TOKEN);
-  const result = await runFlow(
+  return runFlow(
     flow,
     { auth: ctx, request: requestInput },
     { integrationRunner: new EngineCoreIntegrationRunner(gateway), schemas: resolveSchema },
   );
-  return engineResultToResponse(result);
+}
+
+export async function runEngineFlow(
+  request: Request,
+  flow: FlowDefinitionInput,
+  ctx: ExecutionContext,
+  accessToken: string,
+): Promise<Response> {
+  return engineResultToResponse(await runFlowForRequest(request, flow, ctx, accessToken));
 }
