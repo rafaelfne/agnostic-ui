@@ -1,6 +1,7 @@
 import 'package:agnostic_ui_contract/agnostic_ui_contract.dart';
 import 'package:flutter/material.dart';
 
+import 'cards.dart';
 import 'sdui_registry.dart';
 
 /// Primitivos Core UI (F2.6): `text`, `button`, `icon`, `input`, `row`,
@@ -50,14 +51,22 @@ Widget _container(
       children: children,
     );
 
-/// Registry padrão dos primitivos Core UI, com fallback gracioso opcional.
+/// Primitivos Core UI (F2.6).
+final Map<String, SduiBuilder> coreComponents = <String, SduiBuilder>{
+  'text': _text,
+  'button': _button,
+  'icon': _icon,
+  'input': _input,
+  'row': _row,
+  'container': _container,
+};
+
+/// Registry padrão do catálogo — primitivos Core UI + família Cards (F6), com
+/// fallback gracioso opcional. Famílias seguintes (Headers/Listas, especializados)
+/// somam aqui em F7/F8.
 SduiRegistry createDefaultRegistry(
         {void Function(String type)? onUnknownType}) =>
     SduiRegistry(<String, SduiBuilder>{
-      'text': _text,
-      'button': _button,
-      'icon': _icon,
-      'input': _input,
-      'row': _row,
-      'container': _container,
+      ...coreComponents,
+      ...cardComponents,
     }, onUnknownType: onUnknownType);
