@@ -1,0 +1,13 @@
+{
+  "name": "conditional",
+  "description": "Ternário inline: escolhe o rótulo conforme o context.",
+  "template": {
+    "type": "badge",
+    "props": { "label": "{{ user.premium ? 'VIP' : 'Padrão' }}" }
+  },
+  "context": { "user": { "premium": true } },
+  "expected": {
+    "type": "badge",
+    "props": { "label": "VIP" }
+  }
+}
