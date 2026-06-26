@@ -20,11 +20,15 @@ export 'package:agnostic_ui_contract/agnostic_ui_contract.dart'
         NavigateFlowAction,
         RefreshHomePageAction,
         ReplaceCurrentAction,
+        SduiDocument,
+        SduiException,
+        SduiRefresh,
         TemplateNode,
         resolveTemplate,
         evaluateExpression;
 
 export 'src/bridge/bridge_constants.dart';
+export 'src/client/sdui_client.dart';
 export 'src/dispatch/dispatcher.dart';
 export 'src/dispatch/navigation_delegate.dart';
 export 'src/bridge/default_handlers.dart' show defaultBridgeHandlers;
