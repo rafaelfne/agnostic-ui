@@ -2,6 +2,7 @@ import 'package:agnostic_ui_contract/agnostic_ui_contract.dart';
 import 'package:flutter/material.dart';
 
 import 'cards.dart';
+import 'exception.dart';
 import 'headers.dart';
 import 'lists.dart';
 import 'sdui_registry.dart';
@@ -79,4 +80,5 @@ SduiRegistry createDefaultRegistry(
       ...headerComponents,
       ...listComponents,
       ...specializedComponents,
+      ...exceptionComponents,
     }, onUnknownType: onUnknownType);
