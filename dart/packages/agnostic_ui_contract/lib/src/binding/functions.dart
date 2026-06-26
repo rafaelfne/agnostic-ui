@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 import 'errors.dart';
 
 /// Locale usado pelas funções de formatação quando nenhum é informado.
@@ -27,7 +29,10 @@ Object? _arg(List<Object?> args, int index) =>
 
 /// Biblioteca curada de funções (espelho do `functions.ts`). Pura dado
 /// `(args, ctx)`: sem I/O, sem globais, sem relógio. As funções locale-aware
-/// (`currency`/`percent`/`date`) chegam em F2.2 (intl).
+/// (`currency`/`percent`/`date`) usam `intl` com o locale da avaliação; `date`
+/// fixa UTC para reprodutibilidade. (A paridade exata de símbolo de moeda com o
+/// `Intl` do JS é um eixo separado — por isso não entram nos vetores de
+/// conformance.)
 final Map<String, CuratedFunction> curatedFunctions = <String, CuratedFunction>{
   'upper': (args, ctx) => toText(_arg(args, 0)).toUpperCase(),
   'lower': (args, ctx) => toText(_arg(args, 0)).toLowerCase(),
@@ -53,5 +58,35 @@ final Map<String, CuratedFunction> curatedFunctions = <String, CuratedFunction>{
     if (value is String) return value.length;
     if (value is List) return value.length;
     return 0;
+  },
+  'currency': (args, ctx) {
+    final String code = toText(_arg(args, 1));
+    if (code.isEmpty) {
+      throw ExpressionError('currency(value, code): missing currency code');
+    }
+    return NumberFormat.simpleCurrency(locale: ctx.locale, name: code)
+        .format(toNumber(_arg(args, 0)));
+  },
+  'percent': (args, ctx) {
+    final Object? rawDigits = _arg(args, 1);
+    final int digits = rawDigits is num ? rawDigits.toInt() : 0;
+    return NumberFormat.decimalPercentPattern(
+      locale: ctx.locale,
+      decimalDigits: digits,
+    ).format(toNumber(_arg(args, 0)));
+  },
+  // `date` requer `initializeDateFormatting(locale)` (intl) para locales fora do
+  // default en-US — o host inicializa antes de renderizar.
+  'date': (args, ctx) {
+    final Object? input = _arg(args, 0);
+    final DateTime date;
+    try {
+      date = input is num
+          ? DateTime.fromMillisecondsSinceEpoch(input.toInt(), isUtc: true)
+          : DateTime.parse(toText(input)).toUtc();
+    } on FormatException {
+      throw ExpressionError('date(): invalid date ${toText(input)}');
+    }
+    return DateFormat.yMd(ctx.locale).format(date);
   },
 };
