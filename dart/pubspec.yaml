@@ -1,0 +1,41 @@
+# Raiz do workspace Dart (pub workspaces nativos, Dart >= 3.6) — orquestra os
+# três pacotes da frente nativa (ADR 0005 §3). Não publicado. `flutter pub get`
+# aqui resolve todos os membros; `melos` (config na seção `melos:` abaixo, padrão
+# melos 8) provê os scripts agregados que o Turbo dispara no CI.
+name: agnostic_ui_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+dev_dependencies:
+  melos: ^8.0.0
+
+workspace:
+  - packages/agnostic_ui_contract
+  - packages/agnostic_ui_flutter
+  - packages/agnostic_ui_sdk
+  - packages/playground
+
+melos:
+  scripts:
+    analyze:
+      description: Análise estática (fatal em infos) de todos os pacotes.
+      exec: dart analyze --fatal-infos .
+
+    generate:
+      description: Gera os modelos Dart de contrato a partir do JSON Schema do core.
+      run: dart run tool/generate_models.dart
+
+    generate:check:
+      description: Falha se os modelos gerados estiverem desatualizados (drift).
+      run: dart run tool/generate_models.dart --check
+
+    test:
+      description: >-
+        Testes de todos os pacotes — `dart test` nos puros, `flutter test` nos
+        Flutter. Goldens (tag `golden`) ficam de fora do CI (sensíveis à
+        plataforma); rode-os local com `flutter test --tags golden`.
+      run: >-
+        melos exec --no-flutter --concurrency=1 -- dart test &&
+        melos exec --flutter --concurrency=1 -- flutter test --exclude-tags golden

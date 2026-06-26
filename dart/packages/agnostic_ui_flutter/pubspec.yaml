@@ -1,0 +1,24 @@
+# Renderer SDUI nativo: TemplateRenderer, registry de widgets,
+# Dispatcher/FlowEngine, theming e SduiClient (ADR 0005 §3). Consome o contrato
+# de agnostic_ui_contract. Publicado no pub.dev na Fase F10.
+name: agnostic_ui_flutter
+description: >-
+  Native Flutter SDUI renderer for Agnostic UI: parses the same TemplateNode
+  documents as the React renderer and builds native widgets (no WebView).
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.24.0'
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  agnostic_ui_contract: any
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter

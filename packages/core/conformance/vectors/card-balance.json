@@ -1,0 +1,13 @@
+{
+  "name": "card-balance",
+  "description": "Binding dentro das props de um componente do catálogo (família Cards).",
+  "template": {
+    "type": "card-balance",
+    "props": { "label": "Saldo", "amount": "{{ balance.amount }}" }
+  },
+  "context": { "balance": { "amount": "1.234,50" } },
+  "expected": {
+    "type": "card-balance",
+    "props": { "label": "Saldo", "amount": "1.234,50" }
+  }
+}

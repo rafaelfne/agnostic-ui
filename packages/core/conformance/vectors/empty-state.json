@@ -1,0 +1,13 @@
+{
+  "name": "empty-state",
+  "description": "Binding nas props de um componente especializado (empty-state).",
+  "template": {
+    "type": "empty-state",
+    "props": { "title": "Sem itens", "message": "{{ msg }}" }
+  },
+  "context": { "msg": "Adicione um produto" },
+  "expected": {
+    "type": "empty-state",
+    "props": { "title": "Sem itens", "message": "Adicione um produto" }
+  }
+}

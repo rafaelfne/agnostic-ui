@@ -24,14 +24,22 @@ export const EXPRESSION_OPERATORS = [
 ] as const;
 export type ExpressionOperator = (typeof EXPRESSION_OPERATORS)[number];
 
-/** Curated, pure functions available to expressions. No I/O, no globals. */
+/**
+ * Curated functions available to expressions. No I/O, no globals. The formatting
+ * trio (`currency`/`percent`/`date`) is locale-aware via the evaluation locale
+ * (ambient, deterministic) — never reads ambient globals like `Date.now`.
+ */
 export const EXPRESSION_FUNCTIONS = [
   'upper',
   'lower',
+  'uppercase',
   'concat',
   'coalesce',
   'format',
   'len',
+  'currency',
+  'percent',
+  'date',
 ] as const;
 export type ExpressionFunction = (typeof EXPRESSION_FUNCTIONS)[number];
 

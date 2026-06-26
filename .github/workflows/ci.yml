@@ -16,4 +16,30 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @yukilabs/agnostic-ui-next gen:di:check
       - run: pnpm turbo run lint typecheck test build
+      # Drift do contrato: Zod → JSON Schema (ADR 0005). O schema→Dart é checado
+      # no job `dart`. Espelha o gen:di:check.
+      - run: pnpm --filter @yukilabs/agnostic-ui-core gen:schema:check
+
+  # Pipeline Dart/Flutter da frente nativa (ADR 0005) — toolchain separada do
+  # pnpm, mesmo repo. Espelha `pnpm dart:ci`.
+  dart:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dart
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: dart pub global activate melos
+      - run: echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+      - run: flutter pub get
+      - run: melos run analyze
+      # Drift do contrato: JSON Schema → modelos Dart (espelha gen:di:check).
+      - run: melos run generate:check
+      - run: melos run test

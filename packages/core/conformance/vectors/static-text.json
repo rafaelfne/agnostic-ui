@@ -1,0 +1,13 @@
+{
+  "name": "static-text",
+  "description": "Sem binding: a árvore resolvida é igual ao template.",
+  "template": {
+    "type": "text",
+    "props": { "value": "Olá" }
+  },
+  "context": {},
+  "expected": {
+    "type": "text",
+    "props": { "value": "Olá" }
+  }
+}

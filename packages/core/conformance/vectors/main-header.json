@@ -1,0 +1,13 @@
+{
+  "name": "main-header",
+  "description": "Binding nas props de um header do catálogo (família Headers).",
+  "template": {
+    "type": "main-header",
+    "props": { "title": "Olá, {{ user.name }}", "subtitle": "bem-vindo" }
+  },
+  "context": { "user": { "name": "Ada" } },
+  "expected": {
+    "type": "main-header",
+    "props": { "title": "Olá, Ada", "subtitle": "bem-vindo" }
+  }
+}

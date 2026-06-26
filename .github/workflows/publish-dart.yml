@@ -1,0 +1,34 @@
+name: Publish Dart
+
+# Gate de release dos pacotes Dart no pub.dev (ADR 0005, F10.4). Dispatch manual.
+# A publicação real exige remover `publish_to: none` dos pacotes + credenciais do
+# pub.dev — ver dart/README.md (seção Release). Os passos de publish ficam abaixo,
+# comentados, prontos para habilitar.
+on:
+  workflow_dispatch:
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dart
+    env:
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: dart pub global activate melos
+      - run: echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+      - run: flutter pub get
+      - run: melos run analyze
+      - run: melos run test
+      # Publicação (manual), após remover `publish_to: none` e configurar PUB_TOKEN:
+      # - run: dart pub publish --force
+      #   working-directory: dart/packages/agnostic_ui_contract
+      # - run: dart pub publish --force
+      #   working-directory: dart/packages/agnostic_ui_flutter
+      # - run: dart pub publish --force
+      #   working-directory: dart/packages/agnostic_ui_sdk

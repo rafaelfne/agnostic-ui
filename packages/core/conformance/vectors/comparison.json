@@ -1,0 +1,13 @@
+{
+  "name": "comparison",
+  "description": "Comparação resolve para booleano preservando o tipo.",
+  "template": {
+    "type": "row",
+    "props": { "visible": "{{ count > 2 }}" }
+  },
+  "context": { "count": 3 },
+  "expected": {
+    "type": "row",
+    "props": { "visible": true }
+  }
+}

@@ -1,0 +1,24 @@
+# Yuki Labs Playground (F10): app de referência que dirige o renderer nativo por
+# marker `app_sandbox_<tenant>_<profile>`, com documentos mock por perfil. Não
+# publicado (é exemplo/E2E).
+name: agnostic_ui_playground
+description: Reference app driving the native SDUI renderer by sandbox marker/profile.
+version: 0.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.24.0'
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  agnostic_ui_contract: any
+  agnostic_ui_flutter: any
+  agnostic_ui_sdk: any
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter

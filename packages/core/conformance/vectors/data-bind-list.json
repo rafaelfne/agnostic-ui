@@ -1,0 +1,22 @@
+{
+  "name": "data-bind-list",
+  "description": "dataBind expande um filho por item da lista, com $item e $index.",
+  "template": {
+    "type": "list",
+    "children": [
+      {
+        "type": "item",
+        "dataBind": "{{ positions }}",
+        "props": { "label": "{{ $index }}: {{ $item.name }}" }
+      }
+    ]
+  },
+  "context": { "positions": [{ "name": "Ada" }, { "name": "Bob" }] },
+  "expected": {
+    "type": "list",
+    "children": [
+      { "type": "item", "props": { "label": "0: Ada" } },
+      { "type": "item", "props": { "label": "1: Bob" } }
+    ]
+  }
+}

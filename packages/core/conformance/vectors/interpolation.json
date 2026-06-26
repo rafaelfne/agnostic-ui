@@ -1,0 +1,13 @@
+{
+  "name": "interpolation",
+  "description": "Texto + placeholder vira concat (resultado string).",
+  "template": {
+    "type": "text",
+    "props": { "value": "Olá, {{ user.name }}!" }
+  },
+  "context": { "user": { "name": "Ada" } },
+  "expected": {
+    "type": "text",
+    "props": { "value": "Olá, Ada!" }
+  }
+}
