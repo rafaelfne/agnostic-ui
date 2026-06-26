@@ -7,8 +7,19 @@
 library;
 
 export 'package:agnostic_ui_contract/agnostic_ui_contract.dart'
-    show TemplateNode, resolveTemplate, evaluateExpression;
+    show
+        Envelope,
+        EnvelopeError,
+        EnvelopeMeta,
+        EnvelopeOrigin,
+        EnvelopeType,
+        TemplateNode,
+        resolveTemplate,
+        evaluateExpression;
 
+export 'src/bridge/bridge_constants.dart';
+export 'src/bridge/default_handlers.dart' show defaultBridgeHandlers;
+export 'src/bridge/native_bridge.dart' show MethodHandler, NativeBridge;
 export 'src/core_components.dart' show createDefaultRegistry;
 export 'src/render_mode.dart';
 export 'src/sdui_registry.dart';
