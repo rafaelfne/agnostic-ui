@@ -43,12 +43,38 @@ export function resolveTemplate(
     result.props = resolveValue(node.props, evaluate, scope, options) as Record<string, unknown>;
   }
   if (node.body !== undefined) {
-    result.body = node.body.map((child) => resolveTemplate(child, scope, evaluate, options));
+    result.body = resolveChildren(node.body, scope, evaluate, options);
   }
   if (node.children !== undefined) {
-    result.children = node.children.map((child) =>
-      resolveTemplate(child, scope, evaluate, options),
-    );
+    result.children = resolveChildren(node.children, scope, evaluate, options);
   }
   return result;
+}
+
+/**
+ * Resolves a list of child nodes, expanding any with a `dataBind` directive: the
+ * child becomes N siblings, one per item of the bound array, each with `$item`
+ * and `$index` added to scope. A non-array (or absent) binding yields no nodes —
+ * the tree never breaks. The `dataBind` directive is consumed (not emitted).
+ */
+function resolveChildren(
+  children: TemplateNode[],
+  scope: Scope,
+  evaluate: ExpressionEvaluator,
+  options: EvalOptions | undefined,
+): TemplateNode[] {
+  const out: TemplateNode[] = [];
+  for (const child of children) {
+    if (child.dataBind === undefined) {
+      out.push(resolveTemplate(child, scope, evaluate, options));
+      continue;
+    }
+    const items = evaluate(child.dataBind, scope, options);
+    if (!Array.isArray(items)) continue;
+    items.forEach((item, index) => {
+      const itemScope: Scope = { ...scope, $item: item, $index: index };
+      out.push(resolveTemplate(child, itemScope, evaluate, options));
+    });
+  }
+  return out;
 }
