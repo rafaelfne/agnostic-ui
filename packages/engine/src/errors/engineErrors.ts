@@ -75,6 +75,24 @@ export class ConfigError extends EngineError {
 }
 
 /**
+ * Raised when an operator attempts an action its contract did not grant — calling
+ * an integration it did not declare, or any egress from a `pure` operator. Sandbox
+ * de capability do ADR 0006 (G4). Classificado como `config`: o flow pediu algo fora
+ * do grant declarado do operador.
+ */
+export class CapabilityError extends EngineError {
+  readonly kind: ErrorKind = 'config';
+  readonly code = 'capability_denied';
+  readonly operator: string;
+
+  constructor(operator: string, message: string) {
+    super(message);
+    this.name = 'CapabilityError';
+    this.operator = operator;
+  }
+}
+
+/**
  * Extracts a stable string `code` from an arbitrary thrown value when it exposes
  * one (e.g. the BFF's `MockGatewayError.code === 'mock_gateway_error'`). Keeps
  * the engine generic: it propagates whatever code the integration tagged, and
