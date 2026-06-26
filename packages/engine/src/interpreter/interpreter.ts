@@ -8,7 +8,11 @@ import {
 import { ConfigError } from '../errors';
 import type { EmittedEvent, IEventBus } from '../events';
 import { evaluateExpression } from '../expression';
-import type { StepDispatcher } from '../governance';
+import {
+  type StepDispatcher,
+  buildCoreGovernedRegistry,
+  createGovernedDispatcher,
+} from '../governance';
 import {
   type EngineServices,
   type OperatorContext,
@@ -33,9 +37,8 @@ export interface RunFlowDeps {
   /** Resolves named schemas for `validate` steps that reference one. */
   schemas?: SchemaResolver;
   /**
-   * @internal Seam strangler (ADR 0006, G1): troca o dispatch fechado (`switch`)
-   * pelo governado por contrato. Default = o `switch`, byte-idêntico. Some quando o
-   * governado virar o caminho (G3).
+   * @internal Seam strangler (ADR 0006). Default = o registry **governado** (G3).
+   * Injete `createSwitchDispatcher()` para o `switch` fechado legado (mantido até G8).
    */
   dispatcher?: StepDispatcher;
 }
@@ -82,6 +85,21 @@ function dispatch(
 }
 
 /**
+ * Dispatcher legado pelo `switch` fechado + `buildDefaultRegistry`. O default do
+ * runtime é o governado (`defaultDispatcher`, G3); este fica reachable para testes de
+ * paridade e back-compat explícito, e sai em G8.
+ *
+ * @internal
+ */
+export function createSwitchDispatcher(): StepDispatcher {
+  const registry = buildDefaultRegistry();
+  return (step, context) => dispatch(step, context, registry);
+}
+
+/** O caminho de dispatch padrão (G3): o registry governado por contrato. */
+const defaultDispatcher: StepDispatcher = createGovernedDispatcher(buildCoreGovernedRegistry());
+
+/**
  * Runs a FlowDefinition over a typed context: validate config → extract input →
  * execute steps in order (honoring each step's `when` guard) → evaluate the
  * output expression. Errors are classified, never thrown to the host.
@@ -91,9 +109,7 @@ export async function runFlow(
   input: EngineRunInput,
   deps: RunFlowDeps,
 ): Promise<EngineResult> {
-  const registry = buildDefaultRegistry();
-  const dispatcher: StepDispatcher =
-    deps.dispatcher ?? ((step, context) => dispatch(step, context, registry));
+  const dispatcher: StepDispatcher = deps.dispatcher ?? defaultDispatcher;
   const emitted: EmittedEvent[] = [];
   const eventBus: IEventBus = {
     emit: (event) => {

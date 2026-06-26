@@ -7,12 +7,12 @@ import { InMemoryEventBus } from '../events';
 import { evaluateExpression } from '../expression';
 import {
   type StepDispatcher,
+  OperatorContractSchema,
   buildCoreGovernedRegistry,
-  createGovernedDispatcher,
-  dispatchGoverned,
   contractRefToString,
+  dispatchGoverned,
 } from '../governance';
-import { runFlow } from '../interpreter';
+import { createSwitchDispatcher, runFlow } from '../interpreter';
 import type { EngineServices } from '../operators';
 import type { IIntegrationRunner } from '../ports';
 import type { FlowDefinitionInput, StepDef } from '../schemas';
@@ -20,11 +20,12 @@ import type { FlowDefinitionInput, StepDef } from '../schemas';
 import { getBalanceFlow, investScreenFlow } from './fixtures/flows';
 import { MockIntegrationRunner } from './fixtures/mockIntegrationRunner';
 
-const governed = createGovernedDispatcher(buildCoreGovernedRegistry());
 const live: ExecutionContext = { mode: 'live', tenantId: 'partnerco', customerId: 'cus_1' };
 const trivialRunner: IIntegrationRunner = { run: async () => ({}) };
+// O default do runtime é o governado (G3); o switch fica reachable para paridade.
+const switchDispatcher = createSwitchDispatcher();
 
-describe('G1 — registry governado roda o vocabulário atual em paridade', () => {
+describe('Frente G — registry governado (G1–G3)', () => {
   it('registra os 6 operadores como core.*@1', () => {
     expect(buildCoreGovernedRegistry().refs().sort()).toEqual([
       'core.branch@1',
@@ -71,22 +72,22 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
     ['invest-screen', investScreenFlow],
   ];
 
-  it.each(parityCases)('paridade switch↔governado: %s', async (_name, flow) => {
-    const viaSwitch = await runFlow(
+  it.each(parityCases)('paridade default(governado)↔switch legado: %s', async (_name, flow) => {
+    const viaGoverned = await runFlow(
       flow,
       { auth: sandbox },
       { integrationRunner: new MockIntegrationRunner() },
     );
-    const viaGoverned = await runFlow(
+    const viaSwitch = await runFlow(
       flow,
       { auth: sandbox },
-      { integrationRunner: new MockIntegrationRunner(), dispatcher: governed },
+      { integrationRunner: new MockIntegrationRunner(), dispatcher: switchDispatcher },
     );
     expect(viaGoverned.ok).toBe(true);
     expect(viaGoverned).toEqual(viaSwitch);
   });
 
-  it('branch + emit-event despacham pelo governado', async () => {
+  it('branch + emit-event despacham pelo default (governado)', async () => {
     const flow: FlowDefinitionInput = {
       id: 'branch-demo',
       name: 'branch demo',
@@ -102,13 +103,13 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
     const res = await runFlow(
       flow,
       { auth: live, request: { flag: 1 } },
-      { integrationRunner: trivialRunner, dispatcher: governed },
+      { integrationRunner: trivialRunner },
     );
     expect(res.ok).toBe(true);
     if (res.ok) expect(res.emitted.map((event) => event.event)).toContain('hit');
   });
 
-  it('foreach: o governado executa; o switch legado tinha gap (no-op)', async () => {
+  it('foreach: o default (governado) agora executa; o switch legado é no-op (G3 fechou o gap)', async () => {
     const flow: FlowDefinitionInput = {
       id: 'foreach-demo',
       name: 'foreach demo',
@@ -130,16 +131,14 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
         { integrationRunner: trivialRunner, dispatcher },
       );
 
-    const viaGoverned = await run(governed);
-    const viaSwitch = await run();
+    const viaGoverned = await run(); // default = governado
+    const viaSwitch = await run(switchDispatcher);
 
     expect(viaGoverned.ok).toBe(true);
     expect(viaSwitch.ok).toBe(true);
-    // O governado faz o lookup do ref e executa o foreach (3 emissões).
     if (viaGoverned.ok) {
       expect(viaGoverned.emitted.filter((event) => event.event === 'row')).toHaveLength(3);
     }
-    // O switch legado não tem caso `foreach` → o step é no-op (gap que o governado fecha).
     if (viaSwitch.ok) {
       expect(viaSwitch.emitted.filter((event) => event.event === 'row')).toHaveLength(0);
     }
@@ -156,6 +155,33 @@ describe('G1 — registry governado roda o vocabulário atual em paridade', () =
     const context = { ctx: createFlowContext(live, {}), services, profile: undefined };
     const unknownStep = { op: 'tenant.nope@1' } as unknown as StepDef;
     expect(() => dispatchGoverned(unknownStep, context, registry)).toThrow(ConfigError);
+  });
+
+  it('um operador de tenant registrado despacha pelo governado (G3)', async () => {
+    const registry = buildCoreGovernedRegistry();
+    let called = false;
+    registry.register<StepDef>(
+      OperatorContractSchema.parse({
+        ref: { namespace: 'acme', name: 'ping', version: 1 },
+        input: {},
+        output: {},
+        capabilities: { pure: true },
+        effects: {},
+      }),
+      () => {
+        called = true;
+      },
+    );
+    expect(registry.resolve('acme.ping@1')).toBeDefined();
+    const services: EngineServices = {
+      integrationRunner: trivialRunner,
+      eventBus: new InMemoryEventBus(),
+      evaluate: evaluateExpression,
+      runSteps: async () => {},
+    };
+    const context = { ctx: createFlowContext(live, {}), services, profile: undefined };
+    await dispatchGoverned({ op: 'acme.ping@1' } as unknown as StepDef, context, registry);
+    expect(called).toBe(true);
   });
 
   it('contractRefToString formata o ref namespaced', () => {
