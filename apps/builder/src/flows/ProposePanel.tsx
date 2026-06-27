@@ -12,9 +12,47 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { type FlowIntent, type IntentDiff, diffIntent, flowIntent } from './flowIntent';
 import type { FlowDraft } from './flowModel';
+import { type OpMaturity, operatorMaturities } from './vocabulary';
 
 /** Tier → cor do badge (mesma escala do pré-flight server-side, G5). */
 const TIER_VARIANT = { safe: 'success', sensitive: 'warning', critical: 'destructive' } as const;
+
+/** Maturidade → cor (Fase J): core estabelecido (neutro), proven ok, experimental/unknown alerta. */
+const MATURITY_VARIANT = {
+  core: 'secondary',
+  proven: 'success',
+  experimental: 'warning',
+  unknown: 'destructive',
+} as const satisfies Record<OpMaturity, string>;
+
+/** Operadores do flow com sua MATURIDADE de governança (J.2): core mostra só o nome; o
+ *  resto traz o rótulo + cor. A graduação para core é gated e precisa de um store de
+ *  extensões (ainda não existe) — por isso aqui é leitura, sem ação de graduar. */
+function OperatorMaturityRow({
+  operators,
+  added,
+}: {
+  operators: string[];
+  added: string[];
+}): ReactElement {
+  const maturities = operatorMaturities(operators);
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-muted-foreground">Operators:</span>
+      {maturities.length === 0 ? (
+        <span className="text-muted-foreground">none</span>
+      ) : (
+        maturities.map(({ op, maturity }) => (
+          <Badge key={op} variant={MATURITY_VARIANT[maturity]} title={`maturity: ${maturity}`}>
+            {op}
+            {maturity !== 'core' ? ` · ${maturity}` : ''}
+            {added.includes(op) ? ' (new)' : ''}
+          </Badge>
+        ))
+      )}
+    </div>
+  );
+}
 
 function errorText(caught: unknown): string {
   if (caught instanceof BuilderApiError) {
@@ -66,7 +104,12 @@ function IntentReview({ intent, diff }: { intent: FlowIntent; diff: IntentDiff }
       />
       <ReviewRow label="Emits events" values={intent.emits} added={diff.addedEmits} />
       <ReviewRow label="Writes" values={intent.writes} added={[]} />
-      <ReviewRow label="Operators" values={intent.operators} added={diff.addedOperators} />
+      <OperatorMaturityRow operators={intent.operators} added={diff.addedOperators} />
+      <p className="text-xs text-muted-foreground">
+        Maturity: core (governed built-in) · proven (certified extension) · experimental (unproven)
+        · unknown (no contract). Graduating an extension to core is gated and needs an extension
+        store — coming next.
+      </p>
       {intent.irreversible && (
         <p className="text-destructive">
           ⚠ contains an irreversible step — requires human pre-flight
