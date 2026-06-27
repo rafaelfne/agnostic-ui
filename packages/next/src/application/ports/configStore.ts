@@ -4,7 +4,20 @@
  * publish is fail-closed (validated before the pointer flips — see publishFlow).
  * Implementations live in infra (Drizzle/Postgres), behind RLS by tenant.
  */
-export type ConfigArtifactKind = 'flow' | 'integration' | 'screen' | 'event' | 'hook';
+/**
+ * `flow`/`integration`/`screen`/`event`/`hook` são artefatos SDUI. `operator`/`component`
+ * são **contratos de extensão** de tenant (`<tenant>.*`, Fase J): o store de extensões
+ * reusa a mesma máquina (versão/draft/publish/RLS), validados contra os schemas de
+ * contrato no publish. São a persistência que destrava listar/graduar extensões.
+ */
+export type ConfigArtifactKind =
+  | 'flow'
+  | 'integration'
+  | 'screen'
+  | 'event'
+  | 'hook'
+  | 'operator'
+  | 'component';
 export type ConfigVersionStatus = 'draft' | 'published';
 
 export interface ConfigArtifactRef {

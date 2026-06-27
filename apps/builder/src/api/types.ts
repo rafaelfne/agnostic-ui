@@ -1,6 +1,15 @@
 /** The HTTP contract of the builder API (`/api/builder/*`, ADR 0004 §2). */
 
-export const ARTIFACT_KINDS = ['flow', 'integration', 'screen', 'event', 'hook'] as const;
+export const ARTIFACT_KINDS = [
+  'flow',
+  'integration',
+  'screen',
+  'event',
+  'hook',
+  // Contratos de extensão de tenant (Fase J) — armazenados como artefatos.
+  'operator',
+  'component',
+] as const;
 export type ArtifactKind = (typeof ARTIFACT_KINDS)[number];
 
 /** One row of the artifact list — no body (see {@link ArtifactVersion} for bodies). */
