@@ -8,11 +8,23 @@ import type { ZodTypeAny } from 'zod';
 
 import type { ConfigArtifactKind, ConfigArtifactRef, IConfigStore } from '../../application/ports';
 
-import { publishFlowVersion } from './publishFlow';
+import { publishFlowVersion, validateFlowVersion } from './publishFlow';
+
+export type ArtifactValidationError =
+  | 'version_not_found'
+  | 'invalid_artifact'
+  | 'invalid_flow'
+  | 'dry_run_failed';
+
+export interface ArtifactValidationOutcome {
+  valid: boolean;
+  error?: ArtifactValidationError;
+  detail?: string;
+}
 
 export interface ArtifactPublishOutcome {
   published: boolean;
-  error?: 'version_not_found' | 'invalid_artifact' | 'invalid_flow' | 'dry_run_failed';
+  error?: ArtifactValidationError;
   detail?: string;
 }
 
@@ -25,10 +37,35 @@ const SCHEMA_BY_KIND: Record<Exclude<ConfigArtifactKind, 'flow'>, ZodTypeAny> = 
 };
 
 /**
- * Fail-closed publish for any artifact kind (ADR 0004 §7). A flow goes through
- * `publishFlowVersion` (schema + dry-run); every other kind is validated against
- * its engine schema before the pointer flips. A broken draft never gets published,
- * whatever its kind. Rollback is just publishing an earlier (already-valid) version.
+ * Valida um draft de qualquer kind contra seu schema (flow tb. dry-runs), **sem**
+ * publicar. Extraído do publish para a **proposta da IA** (Frente I, ADR 0006): a IA
+ * é só mais um editor e sua geração passa por ESTE mesmo portão, sem flipar o ponteiro.
+ * `publishArtifactVersion` = isto + `store.publish` no sucesso.
+ */
+export async function validateArtifactVersion(
+  store: IConfigStore,
+  ref: ConfigArtifactRef,
+  version: number,
+): Promise<ArtifactValidationOutcome> {
+  if (ref.kind === 'flow') return validateFlowVersion(store, ref, version);
+
+  const versions = await store.listVersions(ref);
+  const target = versions.find((candidate) => candidate.version === version);
+  if (target === undefined) return { valid: false, error: 'version_not_found' };
+
+  const parsed = SCHEMA_BY_KIND[ref.kind].safeParse(target.body);
+  if (!parsed.success) {
+    return { valid: false, error: 'invalid_artifact', detail: parsed.error.message };
+  }
+  return { valid: true };
+}
+
+/**
+ * Fail-closed publish for any artifact kind (ADR 0004 §7): `validateArtifactVersion`
+ * then flips the pointer only when valid. A flow goes through `publishFlowVersion`
+ * (schema + dry-run); every other kind is validated against its engine schema. A
+ * broken draft never gets published, whatever its kind. Rollback is just publishing
+ * an earlier (already-valid) version.
  */
 export async function publishArtifactVersion(
   store: IConfigStore,
@@ -37,15 +74,10 @@ export async function publishArtifactVersion(
 ): Promise<ArtifactPublishOutcome> {
   if (ref.kind === 'flow') return publishFlowVersion(store, ref, version);
 
-  const versions = await store.listVersions(ref);
-  const target = versions.find((candidate) => candidate.version === version);
-  if (target === undefined) return { published: false, error: 'version_not_found' };
-
-  const parsed = SCHEMA_BY_KIND[ref.kind].safeParse(target.body);
-  if (!parsed.success) {
-    return { published: false, error: 'invalid_artifact', detail: parsed.error.message };
+  const validation = await validateArtifactVersion(store, ref, version);
+  if (!validation.valid) {
+    return { published: false, error: validation.error, detail: validation.detail };
   }
-
   await store.publish(ref, version);
   return { published: true };
 }
