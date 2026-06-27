@@ -7,4 +7,5 @@ export * from './template';
 export * from './ports';
 export * from './events';
 export * from './operators';
+export * from './governance';
 export * from './interpreter';

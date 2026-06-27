@@ -7,6 +7,7 @@ library;
 
 export 'src/action/action_def.dart';
 export 'src/binding/binding.dart' show evaluateExpression;
+export 'src/component/validate_props.dart' show validatePropsAgainstSchema;
 export 'src/document/sdui_document.dart';
 export 'src/binding/errors.dart' show ExpressionError;
 export 'src/binding/functions.dart' show EvalContext, defaultLocale;

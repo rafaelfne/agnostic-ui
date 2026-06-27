@@ -1,0 +1,65 @@
+{
+  "$comment": "AUTO-GERADO por scripts/gen-json-schema.mjs — não editar à mão. Rode `pnpm --filter @yukilabs/agnostic-ui-core gen:schema`.",
+  "$ref": "#/definitions/ComponentContract",
+  "definitions": {
+    "ComponentContract": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            },
+            "version": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "namespace",
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "renderOnly": {
+          "type": "boolean",
+          "const": true
+        },
+        "conformance": {
+          "type": "object",
+          "properties": {
+            "fixtures": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": []
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "fixtures": []
+          }
+        }
+      },
+      "required": [
+        "ref",
+        "props",
+        "renderOnly"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

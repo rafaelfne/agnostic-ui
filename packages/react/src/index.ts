@@ -1,5 +1,6 @@
 export * from './version';
 export * from './registry';
+export * from './contracts';
 export * from './binding';
 export * from './primitives';
 export * from './shadcnRegistry';
