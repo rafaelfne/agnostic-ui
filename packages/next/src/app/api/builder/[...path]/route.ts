@@ -1,4 +1,5 @@
 import { getAuthz } from '../../../../infra/authz';
+import { getLlm } from '../../../../infra/llm';
 import { getConfigStore } from '../../../../infra/store';
 import { internalError } from '../../../../interface';
 import { handleBuilderRequest } from '../../../../interface/builder';
@@ -19,6 +20,7 @@ async function handle(request: Request, context: RouteContext): Promise<Response
     return await handleBuilderRequest(request, path, {
       store: getConfigStore(),
       authz: getAuthz(),
+      llm: getLlm(),
     });
   } catch {
     return internalError();

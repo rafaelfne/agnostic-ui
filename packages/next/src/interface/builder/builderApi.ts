@@ -4,13 +4,17 @@ import type {
   ConfigArtifactRef,
   IAuthz,
   IConfigStore,
+  ILlm,
 } from '../../application/ports';
 import { publishArtifactVersion } from '../../infra/store';
+
+import { proposeArtifactVersion } from './proposeArtifact';
 
 /** The handler's collaborators — injected so routes wire production singletons and tests stub them. */
 export interface BuilderDeps {
   store: IConfigStore | null;
   authz: IAuthz;
+  llm: ILlm | null;
 }
 
 const ARTIFACT_KINDS: readonly ConfigArtifactKind[] = [
@@ -68,15 +72,16 @@ async function authorize(
  *   GET  artifacts[?kind=]                      → list artifacts (summary)
  *   GET  artifacts/:kind/:slug/versions         → list versions (bodies included)
  *   GET  artifacts/:kind/:slug/published        → published body (404 if none)
- *   POST artifacts/:kind/:slug/versions  {body} → save draft → 201 { version }
+ *   POST artifacts/:kind/:slug/versions  {body}   → save draft → 201 { version }
  *   POST artifacts/:kind/:slug/publish   {version} → publish/rollback (fail-closed)
+ *   POST artifacts/:kind/:slug/propose   {prompt}  → IA gera draft + valida sem publicar
  */
 export async function handleBuilderRequest(
   request: Request,
   segments: string[],
   deps: BuilderDeps,
 ): Promise<Response> {
-  const { store, authz } = deps;
+  const { store, authz, llm } = deps;
   if (store === null) return fail(503, 'store_unavailable');
 
   const { method } = request;
@@ -136,6 +141,26 @@ export async function handleBuilderRequest(
         return fail(status, outcome.error ?? 'publish_failed', outcome.detail);
       }
       return json(200, { published: true, version });
+    }
+
+    if (method === 'POST' && action === 'propose') {
+      const gate = await authorize(authz, request, 'editor');
+      if (gate instanceof Response) return gate;
+      if (llm === null) return fail(503, 'llm_unavailable');
+      const body = await parseObjectBody(request);
+      const prompt = body?.prompt;
+      if (typeof prompt !== 'string' || prompt.trim() === '') return fail(400, 'invalid_prompt');
+      const ref: ConfigArtifactRef = { tenantId: gate.tenantId, kind, slug };
+      const outcome = await proposeArtifactVersion(store, llm, ref, prompt);
+      if (!outcome.proposed) return fail(422, outcome.error ?? 'propose_failed', outcome.rationale);
+      return json(201, {
+        version: outcome.version,
+        valid: outcome.validation?.valid ?? false,
+        error: outcome.validation?.error,
+        detail: outcome.validation?.detail,
+        resolution: outcome.triage?.resolution,
+        rationale: outcome.rationale,
+      });
     }
   }
 

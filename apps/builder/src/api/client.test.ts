@@ -109,4 +109,26 @@ describe('createBuilderClient', () => {
     expect(error).toBeInstanceOf(BuilderApiError);
     expect((error as BuilderApiError).status).toBe(401);
   });
+
+  it('proposes a draft (POST /propose {prompt}) and returns the result on 201', async () => {
+    const result = { version: 3, valid: true, resolution: 'composition', rationale: 'reuse' };
+    const { fn, calls } = stubFetch(() => jsonResponse(201, result));
+    const client = createBuilderClient({ getToken: () => token, fetch: fn });
+
+    expect(await client.propose('flow', 'pay', 'crie um flow de pagamento')).toEqual(result);
+    expect(calls[0]?.url).toBe('/api/builder/artifacts/flow/pay/propose');
+    expect(calls[0]?.init.method).toBe('POST');
+    expect(JSON.parse(calls[0]?.init.body as string)).toEqual({
+      prompt: 'crie um flow de pagamento',
+    });
+  });
+
+  it('rejects fail-closed when the proposal is blocked (422)', async () => {
+    const { fn } = stubFetch(() => jsonResponse(422, { error: 'triage_blocked', detail: 'no' }));
+    const client = createBuilderClient({ getToken: () => token, fetch: fn });
+    await expect(client.propose('flow', 'pay', 'x')).rejects.toMatchObject({
+      status: 422,
+      code: 'triage_blocked',
+    });
+  });
 });
