@@ -1,4 +1,4 @@
-import type { ArtifactKind, ArtifactSummary, ArtifactVersion } from './types';
+import type { ArtifactKind, ArtifactSummary, ArtifactVersion, ProposeResult } from './types';
 
 /** A non-2xx response from the builder API; carries the canonical `error` code. */
 export class BuilderApiError extends Error {
@@ -30,6 +30,12 @@ export interface BuilderApiClient {
   saveDraft(kind: ArtifactKind, slug: string, body: unknown): Promise<number>;
   /** Publishes (or rolls back to) `version`; rejects fail-closed on a broken draft. */
   publish(kind: ArtifactKind, slug: string, version: number): Promise<void>;
+  /**
+   * Asks the AI to propose a draft from a natural-language prompt (Frente I). Resolves
+   * the {@link ProposeResult} when a draft was created (the AI never publishes);
+   * rejects fail-closed (e.g. triage blocked, AI unavailable) without a draft.
+   */
+  propose(kind: ArtifactKind, slug: string, prompt: string): Promise<ProposeResult>;
 }
 
 interface ApiErrorBody {
@@ -104,6 +110,12 @@ export function createBuilderClient(config: BuilderClientConfig): BuilderApiClie
     async publish(kind, slug, version) {
       const res = await request('POST', `artifacts/${kind}/${enc(slug)}/publish`, { version });
       if (!res.ok) return fail(res);
+    },
+
+    async propose(kind, slug, prompt) {
+      const res = await request('POST', `artifacts/${kind}/${enc(slug)}/propose`, { prompt });
+      if (!res.ok) return fail(res);
+      return (await res.json()) as ProposeResult;
     },
   };
 }

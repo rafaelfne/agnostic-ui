@@ -17,6 +17,8 @@ import {
 import { BuilderApiError } from '../api/client';
 import type { ArtifactVersion } from '../api/types';
 import { useBuilderClient } from '../api/useBuilderClient';
+import { useAuth } from '../auth/AuthContext';
+import { canPublish } from '../auth/roles';
 import { StringListInput } from '@/components/StringListInput';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,7 @@ import { useI18n } from '@/i18n/i18n';
 
 import { FlowCanvasPlaceholder } from './FlowCanvasPlaceholder';
 import { PreviewPane } from './PreviewPane';
+import { ProposePanel } from './ProposePanel';
 import { StepEditor, StepPipelineItem } from './StepEditor';
 import { type FlowDraft, type StepOp, emptyFlow, emptyStep, validateFlow } from './flowModel';
 
@@ -73,6 +76,8 @@ export function FlowEditorPage(): ReactElement {
   const { slug = '' } = useParams();
   const navigate = useNavigate();
   const client = useBuilderClient();
+  const { token } = useAuth();
+  const mayPublish = canPublish(token);
   const { t } = useI18n();
 
   const [draft, setDraft] = useState<FlowDraft | null>(null);
@@ -254,7 +259,7 @@ export function FlowEditorPage(): ReactElement {
           <Button variant="outline" onClick={() => void saveDraft()} disabled={busy}>
             <Save className="size-4" /> {t('editor.saveDraft')}
           </Button>
-          <Button onClick={() => void publish()} disabled={busy}>
+          <Button onClick={() => void publish()} disabled={busy || !mayPublish}>
             <Rocket className="size-4" /> {t('editor.publish')}
           </Button>
         </div>
@@ -262,6 +267,16 @@ export function FlowEditorPage(): ReactElement {
 
       {/* TAB: EDITOR */}
       <TabsContent value="editor" className="mx-auto w-full max-w-[1180px] px-8 pb-14 pt-6">
+        <div className="mb-4">
+          <ProposePanel
+            slug={slug}
+            publishedFlow={(latestPublished?.body as FlowDraft | undefined) ?? null}
+            onProposed={async (_version, body) => {
+              setDraft(body);
+              await refreshVersions();
+            }}
+          />
+        </div>
         <div className="mb-4 grid gap-3.5 lg:grid-cols-2">
           <Card className="p-4.5">
             <h3 className="mb-3.5 flex items-center gap-2 text-sm font-semibold">
@@ -532,7 +547,7 @@ export function FlowEditorPage(): ReactElement {
                         <Button
                           variant="default"
                           size="sm"
-                          disabled={busy}
+                          disabled={busy || !mayPublish}
                           onClick={() => void publishExisting(v.version)}
                         >
                           {t('editor.publishThis')}

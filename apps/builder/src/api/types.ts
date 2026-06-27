@@ -21,3 +21,18 @@ export interface ArtifactVersion {
   createdAt: string;
   publishedAt: string | null;
 }
+
+/**
+ * Result of an AI proposal (Frente I). A `201` means a draft was created (possibly
+ * schema-invalid, `valid:false`); the triage `resolution` records how the AI decided
+ * to satisfy the request. A blocked/needs-extension/unparseable proposal is non-2xx
+ * → {@link BuilderApiError}, never a draft.
+ */
+export interface ProposeResult {
+  version?: number;
+  valid: boolean;
+  error?: string;
+  detail?: string;
+  resolution?: 'composition' | 'integration' | 'expression' | 'needs-extension';
+  rationale: string;
+}
