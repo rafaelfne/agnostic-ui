@@ -2,7 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { IAuthz, LlmResult } from '../application/ports';
+import type { IAuthz, LlmRequest, LlmResult } from '../application/ports';
 import { SupabaseAuthz } from '../infra/authz/SupabaseAuthz';
 import { FakeLlm } from '../infra/llm/FakeLlm';
 import { type ConfigDatabase, DrizzleConfigStore } from '../infra/store/DrizzleConfigStore';
@@ -266,5 +266,42 @@ describe('builder API — AI proposal (I.1, fail-closed)', () => {
       llm: llmReturning(validScreen),
     });
     expect(res.status).toBe(401);
+  });
+
+  it('grounds the proposal tenant-scoped: own artifacts by name, never bodies/secret-refs, never other tenants', async () => {
+    // partnerco (caller): an integration whose body holds a secret-REF, and a screen.
+    await store.saveDraft(
+      { tenantId: 'partnerco', kind: 'integration', slug: 'stripe' },
+      {
+        id: 'stripe',
+        name: 'Stripe',
+        kind: 'rest',
+        auth: { secretRef: 'PARTNER_KEY' },
+        operations: [],
+      },
+    );
+    await store.saveDraft({ tenantId: 'partnerco', kind: 'screen', slug: 'existing' }, validScreen);
+    // otherco: a secret-bearing integration that must never reach partnerco's grounding.
+    await store.saveDraft(
+      { tenantId: 'otherco', kind: 'integration', slug: 'othersecret' },
+      { id: 'othersecret', auth: { secretRef: 'OTHER_KEY' } },
+    );
+
+    let captured: LlmRequest | undefined;
+    const llm = new FakeLlm((req): LlmResult => {
+      captured = req;
+      return { config: validScreen, rationale: 'ok' };
+    });
+    const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
+    expect(res.status).toBe(201);
+
+    const ctx = captured?.context ?? '';
+    expect(ctx).toContain('core.validate@1'); // operator vocabulary
+    expect(ctx).toContain('core.call-integration@1');
+    expect(ctx).toContain('stripe'); // own integration, by slug (from the summary)
+    expect(ctx).toContain('existing'); // own screen, by slug
+    expect(ctx).not.toContain('PARTNER_KEY'); // secret-ref lives in the body — summaries only
+    expect(ctx).not.toContain('othersecret'); // other tenant excluded by RLS
+    expect(ctx).not.toContain('OTHER_KEY');
   });
 });
