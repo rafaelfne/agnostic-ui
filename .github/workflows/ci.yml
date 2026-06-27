@@ -21,6 +21,9 @@ jobs:
       # Drift do contrato: Zod → JSON Schema (ADR 0005). O schema→Dart é checado
       # no job `dart`. Espelha o gen:di:check.
       - run: pnpm --filter @yukilabs/agnostic-ui-core gen:schema:check
+      # Gate de divergência cross-renderer (ADR 0006 §8): os 3 runners cobrem o
+      # corpus e os renderers concordam com cada vetor. Exige o build acima.
+      - run: pnpm run conformance:check
 
   # Pipeline Dart/Flutter da frente nativa (ADR 0005) — toolchain separada do
   # pnpm, mesmo repo. Espelha `pnpm dart:ci`.

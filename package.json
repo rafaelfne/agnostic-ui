@@ -15,11 +15,12 @@
     "format:check": "prettier --check .",
     "setup:local": "node scripts/setup-local.mjs",
     "reset:local": "supabase stop",
+    "conformance:check": "node scripts/conformance-report.mjs",
     "dart:analyze": "cd dart && melos run analyze",
     "dart:test": "cd dart && melos run test",
     "dart:gen:check": "cd dart && melos run generate:check",
     "dart:ci": "pnpm run dart:analyze && pnpm run dart:gen:check && pnpm run dart:test",
-    "ci:local": "pnpm run format:check && pnpm --filter @yukilabs/agnostic-ui-next gen:di:check && pnpm turbo run lint typecheck test build && pnpm --filter @yukilabs/agnostic-ui-core gen:schema:check",
+    "ci:local": "pnpm run format:check && pnpm --filter @yukilabs/agnostic-ui-next gen:di:check && pnpm turbo run lint typecheck test build && pnpm --filter @yukilabs/agnostic-ui-core gen:schema:check && pnpm run conformance:check",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish"
   },
