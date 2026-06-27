@@ -30,18 +30,29 @@ export const TemplateVectorSchema = z
 export type TemplateConformanceVector = z.infer<typeof TemplateVectorSchema>;
 
 /**
- * Vetor de **operador** (`kind: 'operator'`): dado o `input` (e `context` opcional), o
- * operador identificado por `op` (ref namespaced) produz o `expected` (output/efeito).
- * Os runners chegam em H5; H4 fixa o shape (sobre o contrato de operador, G2).
+ * Vetor de **operador** (`kind: 'operator'`): um cenário runnable rodado pelo engine
+ * (operadores só rodam no engine; não é cross-renderer). O `step` é executado num flow
+ * com o `input` como escopo, comparando `output`/emissões/erro com `expect` (H5).
  */
 export const OperatorVectorSchema = z
   .object({
     kind: z.literal('operator'),
     ...baseFields,
-    op: z.string().min(1),
-    input: z.record(z.unknown()),
-    context: z.record(z.unknown()).optional(),
-    expected: z.record(z.unknown()),
+    /** Step a executar (um StepDef; validado ao parsear o flow). */
+    step: z.record(z.unknown()),
+    /** Escopo inicial (entra como `request`). */
+    input: z.record(z.unknown()).optional(),
+    /** Resposta mockada do integration runner (para `call-integration`). */
+    integrationResult: z.unknown().optional(),
+    /** Expressão de saída do flow a comparar com `expect.body`. */
+    output: z.string().min(1),
+    expect: z
+      .object({
+        body: z.unknown().optional(),
+        emits: z.array(z.string()).optional(),
+        errorKind: z.string().optional(),
+      })
+      .strict(),
   })
   .strict();
 export type OperatorConformanceVector = z.infer<typeof OperatorVectorSchema>;

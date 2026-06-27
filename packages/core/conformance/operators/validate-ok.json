@@ -1,0 +1,10 @@
+{
+  "kind": "operator",
+  "name": "validate-ok",
+  "specVersion": "1.0",
+  "description": "validate com campo presente: o flow segue e devolve o campo.",
+  "step": { "op": "validate", "require": ["customerId"] },
+  "input": { "customerId": "c1" },
+  "output": "{{ customerId }}",
+  "expect": { "body": "c1" }
+}

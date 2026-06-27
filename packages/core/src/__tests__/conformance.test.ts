@@ -3,14 +3,15 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { ConformanceVectorSchema } from '../conformance/vector';
 
-const vectorsDir = fileURLToPath(new URL('../../conformance/vectors/', import.meta.url));
-
-const vectors = readdirSync(vectorsDir)
-  .filter((file) => file.endsWith('.json'))
-  .map((file) => ({
-    file,
-    raw: JSON.parse(readFileSync(`${vectorsDir}${file}`, 'utf8')) as unknown,
-  }));
+const vectors = ['vectors', 'operators'].flatMap((kindDir) => {
+  const dir = fileURLToPath(new URL(`../../conformance/${kindDir}/`, import.meta.url));
+  return readdirSync(dir)
+    .filter((file) => file.endsWith('.json'))
+    .map((file) => ({
+      file: `${kindDir}/${file}`,
+      raw: JSON.parse(readFileSync(`${dir}${file}`, 'utf8')) as unknown,
+    }));
+});
 
 describe('corpus de conformance (cross-renderer)', () => {
   it('tem ao menos um vetor', () => {
@@ -36,15 +37,16 @@ describe('corpus de conformance (cross-renderer)', () => {
     expect(() => ConformanceVectorSchema.parse({ ...valid, stray: 1 })).toThrow();
   });
 
-  it('aceita os kinds operator e component (shapes prontos p/ H5)', () => {
+  it('aceita os kinds operator (runnable) e component (reservado)', () => {
     expect(() =>
       ConformanceVectorSchema.parse({
         kind: 'operator',
         name: 'op',
         specVersion: '1.0',
-        op: 'core.validate@1',
+        step: { op: 'validate', require: ['customerId'] },
         input: { customerId: 'c1' },
-        expected: { ok: true },
+        output: '{{ customerId }}',
+        expect: { body: 'c1' },
       }),
     ).not.toThrow();
     expect(() =>
