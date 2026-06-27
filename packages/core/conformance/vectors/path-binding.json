@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "path-binding",
+  "specVersion": "1.0",
   "description": "Binding de path simples: {{ user.name }} resolve do context.",
   "template": {
     "type": "text",

@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "static-text",
+  "specVersion": "1.0",
   "description": "Sem binding: a árvore resolvida é igual ao template.",
   "template": {
     "type": "text",

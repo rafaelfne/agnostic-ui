@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "interpolation",
+  "specVersion": "1.0",
   "description": "Texto + placeholder vira concat (resultado string).",
   "template": {
     "type": "text",

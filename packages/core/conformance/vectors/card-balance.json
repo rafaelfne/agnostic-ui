@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "card-balance",
+  "specVersion": "1.0",
   "description": "Binding dentro das props de um componente do catálogo (família Cards).",
   "template": {
     "type": "card-balance",

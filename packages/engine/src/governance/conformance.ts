@@ -1,7 +1,15 @@
+import {
+  type CertificationLevel,
+  certificationLevel,
+  isCertified,
+} from '@yukilabs/agnostic-ui-core';
+
 import type { ErrorKind } from '../errors';
 import type { Expression, StepDef } from '../schemas';
 
 import type { OperatorContract } from './contract';
+
+export { type CertificationLevel, certificationLevel };
 
 /**
  * Fixture de conformância de operador (G7): um cenário declarativo rodado contra o
@@ -29,8 +37,9 @@ export interface OperatorConformanceFixture {
  * Um contrato é **certificável** quando declara ≥1 fixture. A auditoria migra de
  * "ler `buildDefaultRegistry`" para "contrato + conformância + sandbox": o
  * `registerCertified` recusa contratos sem fixtures (fail-closed) e o harness prova
- * que elas passam.
+ * que elas passam. A lógica de nível mora no `core` (`certificationLevel`/`isCertified`),
+ * fonte única consumida pelo engine (enforcement) e pelo builder/spec (consulta).
  */
 export function certifyContract(contract: OperatorContract): boolean {
-  return contract.conformance.fixtures.length > 0;
+  return isCertified(contract);
 }

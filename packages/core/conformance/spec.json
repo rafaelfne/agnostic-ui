@@ -1,0 +1,388 @@
+{
+  "$comment": "AUTO-GERADO por scripts/gen-conformance-spec.mjs — não editar à mão. Rode `pnpm --filter @yukilabs/agnostic-ui-core gen:conformance`.",
+  "specVersion": "1.0",
+  "counts": {
+    "operator": 4,
+    "template": 11
+  },
+  "vectors": [
+    {
+      "kind": "operator",
+      "name": "call-integration",
+      "description": "call-integration guarda o resultado da integração sob `as`.",
+      "specVersion": "1.0",
+      "step": {
+        "op": "call-integration",
+        "integration": "core",
+        "operation": "getBalance",
+        "as": "balance"
+      },
+      "integrationResult": {
+        "n": 5
+      },
+      "output": "{{ balance.n }}",
+      "expect": {
+        "body": 5
+      }
+    },
+    {
+      "kind": "template",
+      "name": "card-balance",
+      "description": "Binding dentro das props de um componente do catálogo (família Cards).",
+      "specVersion": "1.0",
+      "template": {
+        "type": "card-balance",
+        "props": {
+          "label": "Saldo",
+          "amount": "{{ balance.amount }}"
+        }
+      },
+      "context": {
+        "balance": {
+          "amount": "1.234,50"
+        }
+      },
+      "expected": {
+        "type": "card-balance",
+        "props": {
+          "label": "Saldo",
+          "amount": "1.234,50"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "comparison",
+      "description": "Comparação resolve para booleano preservando o tipo.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "row",
+        "props": {
+          "visible": "{{ count > 2 }}"
+        }
+      },
+      "context": {
+        "count": 3
+      },
+      "expected": {
+        "type": "row",
+        "props": {
+          "visible": true
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "conditional",
+      "description": "Ternário inline: escolhe o rótulo conforme o context.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "badge",
+        "props": {
+          "label": "{{ user.premium ? 'VIP' : 'Padrão' }}"
+        }
+      },
+      "context": {
+        "user": {
+          "premium": true
+        }
+      },
+      "expected": {
+        "type": "badge",
+        "props": {
+          "label": "VIP"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "data-bind-list",
+      "description": "dataBind expande um filho por item da lista, com $item e $index.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "list",
+        "children": [
+          {
+            "type": "item",
+            "props": {
+              "label": "{{ $index }}: {{ $item.name }}"
+            },
+            "dataBind": "{{ positions }}"
+          }
+        ]
+      },
+      "context": {
+        "positions": [
+          {
+            "name": "Ada"
+          },
+          {
+            "name": "Bob"
+          }
+        ]
+      },
+      "expected": {
+        "type": "list",
+        "children": [
+          {
+            "type": "item",
+            "props": {
+              "label": "0: Ada"
+            }
+          },
+          {
+            "type": "item",
+            "props": {
+              "label": "1: Bob"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "template",
+      "name": "empty-state",
+      "description": "Binding nas props de um componente especializado (empty-state).",
+      "specVersion": "1.0",
+      "template": {
+        "type": "empty-state",
+        "props": {
+          "title": "Sem itens",
+          "message": "{{ msg }}"
+        }
+      },
+      "context": {
+        "msg": "Adicione um produto"
+      },
+      "expected": {
+        "type": "empty-state",
+        "props": {
+          "title": "Sem itens",
+          "message": "Adicione um produto"
+        }
+      }
+    },
+    {
+      "kind": "operator",
+      "name": "foreach",
+      "description": "foreach itera o array e roda os sub-steps por item.",
+      "specVersion": "1.0",
+      "step": {
+        "op": "foreach",
+        "items": "{{ xs }}",
+        "as": "rows",
+        "steps": [
+          {
+            "op": "emit-event",
+            "event": "row"
+          }
+        ]
+      },
+      "input": {
+        "xs": [
+          1,
+          2
+        ]
+      },
+      "output": "{{ rows }}",
+      "expect": {
+        "emits": [
+          "row",
+          "row"
+        ]
+      }
+    },
+    {
+      "kind": "template",
+      "name": "interpolation",
+      "description": "Texto + placeholder vira concat (resultado string).",
+      "specVersion": "1.0",
+      "template": {
+        "type": "text",
+        "props": {
+          "value": "Olá, {{ user.name }}!"
+        }
+      },
+      "context": {
+        "user": {
+          "name": "Ada"
+        }
+      },
+      "expected": {
+        "type": "text",
+        "props": {
+          "value": "Olá, Ada!"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "main-header",
+      "description": "Binding nas props de um header do catálogo (família Headers).",
+      "specVersion": "1.0",
+      "template": {
+        "type": "main-header",
+        "props": {
+          "title": "Olá, {{ user.name }}",
+          "subtitle": "bem-vindo"
+        }
+      },
+      "context": {
+        "user": {
+          "name": "Ada"
+        }
+      },
+      "expected": {
+        "type": "main-header",
+        "props": {
+          "title": "Olá, Ada",
+          "subtitle": "bem-vindo"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "nested-children",
+      "description": "Recursão pela árvore: binding resolve dentro de children.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "card",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "{{ title }}"
+            }
+          },
+          {
+            "type": "text",
+            "props": {
+              "value": "{{ body }}"
+            }
+          }
+        ]
+      },
+      "context": {
+        "title": "Saldo",
+        "body": "Disponível"
+      },
+      "expected": {
+        "type": "card",
+        "children": [
+          {
+            "type": "heading",
+            "props": {
+              "text": "Saldo"
+            }
+          },
+          {
+            "type": "text",
+            "props": {
+              "value": "Disponível"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "template",
+      "name": "path-binding",
+      "description": "Binding de path simples: {{ user.name }} resolve do context.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "text",
+        "props": {
+          "value": "{{ user.name }}"
+        }
+      },
+      "context": {
+        "user": {
+          "name": "Ada"
+        }
+      },
+      "expected": {
+        "type": "text",
+        "props": {
+          "value": "Ada"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "pipe-upper",
+      "description": "Pipe para função curada (sem locale, determinístico).",
+      "specVersion": "1.0",
+      "template": {
+        "type": "text",
+        "props": {
+          "value": "{{ user.name | upper }}"
+        }
+      },
+      "context": {
+        "user": {
+          "name": "Ada"
+        }
+      },
+      "expected": {
+        "type": "text",
+        "props": {
+          "value": "ADA"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "static-text",
+      "description": "Sem binding: a árvore resolvida é igual ao template.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "text",
+        "props": {
+          "value": "Olá"
+        }
+      },
+      "context": {},
+      "expected": {
+        "type": "text",
+        "props": {
+          "value": "Olá"
+        }
+      }
+    },
+    {
+      "kind": "operator",
+      "name": "validate-missing",
+      "description": "validate com campo ausente: erro de validation.",
+      "specVersion": "1.0",
+      "step": {
+        "op": "validate",
+        "require": [
+          "customerId"
+        ]
+      },
+      "output": "{{ customerId }}",
+      "expect": {
+        "errorKind": "validation"
+      }
+    },
+    {
+      "kind": "operator",
+      "name": "validate-ok",
+      "description": "validate com campo presente: o flow segue e devolve o campo.",
+      "specVersion": "1.0",
+      "step": {
+        "op": "validate",
+        "require": [
+          "customerId"
+        ]
+      },
+      "input": {
+        "customerId": "c1"
+      },
+      "output": "{{ customerId }}",
+      "expect": {
+        "body": "c1"
+      }
+    }
+  ]
+}

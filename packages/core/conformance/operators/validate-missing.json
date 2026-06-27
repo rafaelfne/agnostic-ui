@@ -1,0 +1,9 @@
+{
+  "kind": "operator",
+  "name": "validate-missing",
+  "specVersion": "1.0",
+  "description": "validate com campo ausente: erro de validation.",
+  "step": { "op": "validate", "require": ["customerId"] },
+  "output": "{{ customerId }}",
+  "expect": { "errorKind": "validation" }
+}

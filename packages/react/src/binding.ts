@@ -1,3 +1,4 @@
+import type { TemplateNode } from '@yukilabs/agnostic-ui-core';
 import { evaluateExpression } from '@yukilabs/agnostic-ui-engine';
 
 export type Scope = Record<string, unknown>;
@@ -25,4 +26,39 @@ export function bindProps(
 ): Record<string, unknown> {
   if (props === undefined) return {};
   return bindValue(props, scope) as Record<string, unknown>;
+}
+
+/**
+ * Resolve uma árvore de `TemplateNode` contra o scope usando o binding do **React**
+ * (`bindValue`/`evaluateExpression`) — espelho de `resolveTemplate` do engine: liga
+ * `{{ ... }}` nas props e expande `dataBind` (um filho por item, com `$item`/`$index`).
+ * É a definição "template + scope → árvore" medida contra o corpus de conformância,
+ * provando que o binding do React concorda com a spec (o renderer usa `bindProps` por
+ * nó; o `dataBind` é normalmente resolvido no servidor, mas a lib resolve a árvore toda).
+ */
+export function resolveTree(node: TemplateNode, scope: Scope): TemplateNode {
+  const result: TemplateNode = { type: node.type };
+  if (node.id !== undefined) result.id = node.id;
+  if (node.props !== undefined) {
+    result.props = bindValue(node.props, scope) as Record<string, unknown>;
+  }
+  if (node.body !== undefined) result.body = resolveChildren(node.body, scope);
+  if (node.children !== undefined) result.children = resolveChildren(node.children, scope);
+  return result;
+}
+
+function resolveChildren(children: TemplateNode[], scope: Scope): TemplateNode[] {
+  const out: TemplateNode[] = [];
+  for (const child of children) {
+    if (child.dataBind === undefined) {
+      out.push(resolveTree(child, scope));
+      continue;
+    }
+    const items = bindValue(child.dataBind, scope);
+    if (!Array.isArray(items)) continue;
+    items.forEach((item, index) => {
+      out.push(resolveTree(child, { ...scope, $item: item, $index: index }));
+    });
+  }
+  return out;
 }

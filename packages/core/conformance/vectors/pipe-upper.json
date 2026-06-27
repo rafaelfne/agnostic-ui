@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "pipe-upper",
+  "specVersion": "1.0",
   "description": "Pipe para função curada (sem locale, determinístico).",
   "template": {
     "type": "text",

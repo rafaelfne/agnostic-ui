@@ -1,5 +1,7 @@
 {
+  "kind": "template",
   "name": "main-header",
+  "specVersion": "1.0",
   "description": "Binding nas props de um header do catálogo (família Headers).",
   "template": {
     "type": "main-header",

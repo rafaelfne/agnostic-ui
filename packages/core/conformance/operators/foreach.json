@@ -1,0 +1,15 @@
+{
+  "kind": "operator",
+  "name": "foreach",
+  "specVersion": "1.0",
+  "description": "foreach itera o array e roda os sub-steps por item.",
+  "step": {
+    "op": "foreach",
+    "items": "{{ xs }}",
+    "as": "rows",
+    "steps": [{ "op": "emit-event", "event": "row" }]
+  },
+  "input": { "xs": [1, 2] },
+  "output": "{{ rows }}",
+  "expect": { "emits": ["row", "row"] }
+}

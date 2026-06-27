@@ -1,0 +1,15 @@
+{
+  "kind": "operator",
+  "name": "call-integration",
+  "specVersion": "1.0",
+  "description": "call-integration guarda o resultado da integração sob `as`.",
+  "step": {
+    "op": "call-integration",
+    "integration": "core",
+    "operation": "getBalance",
+    "as": "balance"
+  },
+  "integrationResult": { "n": 5 },
+  "output": "{{ balance.n }}",
+  "expect": { "body": 5 }
+}
