@@ -51,9 +51,25 @@ interface CallOpts {
   query?: string;
 }
 
-/** `ILlm` que devolve sempre a mesma config (a "geração" da IA), sem rede. */
+const COMPOSITION_TRIAGE: LlmResult = {
+  config: { resolution: 'composition', rationale: 'reuses existing operators' },
+  rationale: 'triage',
+};
+
+/** `ILlm` que responde uma sequência de resultados — uma chamada por item (clamp no último). */
+function scriptLlm(responses: LlmResult[]): FakeLlm {
+  let call = 0;
+  return new FakeLlm(() => {
+    const response = responses[call] ??
+      responses[responses.length - 1] ?? { config: null, rationale: '' };
+    call += 1;
+    return response;
+  });
+}
+
+/** Geração da IA com triagem feliz (composition) seguida da config — o caminho comum. */
 function llmReturning(config: unknown, rationale = 'porque sim'): FakeLlm {
-  return new FakeLlm((): LlmResult => ({ config, rationale }));
+  return scriptLlm([COMPOSITION_TRIAGE, { config, rationale }]);
 }
 
 function call(method: string, path: string, opts: CallOpts = {}): Promise<Response> {
@@ -207,7 +223,12 @@ describe('builder API — AI proposal (I.1, fail-closed)', () => {
       llm: llmReturning(validScreen),
     });
     expect(res.status).toBe(201);
-    expect(await res.json()).toMatchObject({ version: 1, valid: true, rationale: 'porque sim' });
+    expect(await res.json()).toMatchObject({
+      version: 1,
+      valid: true,
+      resolution: 'composition',
+      rationale: 'porque sim',
+    });
 
     // O draft existe…
     const versions = (await (
@@ -288,9 +309,14 @@ describe('builder API — AI proposal (I.1, fail-closed)', () => {
     );
 
     let captured: LlmRequest | undefined;
+    let call_ = 0;
+    const scripted = [COMPOSITION_TRIAGE, { config: validScreen, rationale: 'ok' }];
     const llm = new FakeLlm((req): LlmResult => {
-      captured = req;
-      return { config: validScreen, rationale: 'ok' };
+      captured = req; // ambas as chamadas (triagem + geração) recebem o mesmo grounding
+      const response = scripted[call_] ??
+        scripted[scripted.length - 1] ?? { config: null, rationale: '' };
+      call_ += 1;
+      return response;
     });
     const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
     expect(res.status).toBe(201);
@@ -303,5 +329,94 @@ describe('builder API — AI proposal (I.1, fail-closed)', () => {
     expect(ctx).not.toContain('PARTNER_KEY'); // secret-ref lives in the body — summaries only
     expect(ctx).not.toContain('othersecret'); // other tenant excluded by RLS
     expect(ctx).not.toContain('OTHER_KEY');
+  });
+
+  it('blocks an unjustified needs-extension triage (no generation, no draft)', async () => {
+    // Só a triagem: ela barra, então a segunda chamada (geração) nunca acontece.
+    const llm = scriptLlm([
+      {
+        config: { resolution: 'needs-extension', rationale: 'quero um operador novo' },
+        rationale: 't',
+      },
+    ]);
+    const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'triage_blocked' });
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(0);
+  });
+
+  it('returns a justified needs-extension verdict without generating (no draft yet)', async () => {
+    const llm = scriptLlm([
+      {
+        config: {
+          resolution: 'needs-extension',
+          rationale: 'precisa de um primitivo novo',
+          ruledOut: {
+            composition: 'não compõe',
+            integration: 'não é conector',
+            expression: 'não é expressão',
+          },
+        },
+        rationale: 't',
+      },
+    ]);
+    const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'triage_needs-extension' });
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(0);
+  });
+
+  it('proceeds for an expression-resolution triage and surfaces it in the 201', async () => {
+    const llm = scriptLlm([
+      { config: { resolution: 'expression', rationale: 'só data-shaping' }, rationale: 't' },
+      { config: validScreen, rationale: 'ok' },
+    ]);
+    const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ version: 1, valid: true, resolution: 'expression' });
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(1);
+  });
+
+  it('returns an integration verdict without generating (no draft yet)', async () => {
+    const llm = scriptLlm([
+      {
+        config: { resolution: 'integration', rationale: 'precisa de um conector' },
+        rationale: 't',
+      },
+    ]);
+    const res = await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'x' }, llm });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'triage_integration' });
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(0);
+  });
+
+  it('triages with a distinct prompt before generating (two calls, same grounding)', async () => {
+    const prompts: string[] = [];
+    let seq = 0;
+    const scripted = [COMPOSITION_TRIAGE, { config: validScreen, rationale: 'ok' }];
+    const llm = new FakeLlm((req): LlmResult => {
+      prompts.push(req.prompt);
+      const response = scripted[seq] ??
+        scripted[scripted.length - 1] ?? { config: null, rationale: '' };
+      seq += 1;
+      return response;
+    });
+    await call('POST', 'artifacts/screen/home/propose', { body: { prompt: 'crie X' }, llm });
+    expect(prompts).toHaveLength(2);
+    expect(prompts[0]).toContain('TRIAGE'); // 1ª chamada = triagem
+    expect(prompts[0]).toContain('crie X');
+    expect(prompts[1]).toBe('crie X'); // 2ª chamada = geração (prompt do usuário)
   });
 });

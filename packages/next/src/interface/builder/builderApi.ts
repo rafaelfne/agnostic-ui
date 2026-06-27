@@ -158,6 +158,7 @@ export async function handleBuilderRequest(
         valid: outcome.validation?.valid ?? false,
         error: outcome.validation?.error,
         detail: outcome.validation?.detail,
+        resolution: outcome.triage?.resolution,
         rationale: outcome.rationale,
       });
     }
