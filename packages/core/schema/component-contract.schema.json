@@ -42,7 +42,8 @@
             "fixtures": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               },
               "default": []
             }

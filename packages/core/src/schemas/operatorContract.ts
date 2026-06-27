@@ -52,9 +52,11 @@ export type OperatorEffects = z.infer<typeof OperatorEffectsSchema>;
  * conformância. Em modo estrito o engine recusa carregar o não certificado; o
  * harness (G7) roda as fixtures contra o handler vivo. Default vazio (não
  * certificado) — o registry estrito (`registerCertified`) recusa contratos sem.
+ * Cada ID é não-vazio (trim-validado): uma fixture só-espaço NÃO certifica nem
+ * gradua (senão uma extensão experimental burlaria o portão com `['']`).
  */
 export const ConformanceSchema = z.object({
-  fixtures: z.array(z.string()).default([]),
+  fixtures: z.array(z.string().trim().min(1)).default([]),
 });
 export type Conformance = z.infer<typeof ConformanceSchema>;
 

@@ -1,3 +1,5 @@
+import { type GraduationFailure, graduateContract } from '@yukilabs/agnostic-ui-core';
+
 import { ConfigError } from '../errors';
 import {
   branchOperator,
@@ -77,6 +79,28 @@ export class GovernedOperatorRegistry {
 
   refs(): string[] {
     return [...this.entries.keys()];
+  }
+
+  /**
+   * Gradua uma extensão namespaced provada para `core.*` (ADR 0006 §7 — "RFC →
+   * graduate"): valida o portão (`graduateContract`, fail-closed — só `proven`),
+   * recusa colisão com um `core.<name>` já registrado e registra o contrato graduado
+   * sob o ref core **reusando o handler**. O ref namespaced original permanece (graduar
+   * adiciona ao core, não remove a extensão), então flows existentes não quebram.
+   */
+  graduate(
+    opOrRef: string,
+  ):
+    | { ok: true; ref: string }
+    | { ok: false; reason: 'unknown' | GraduationFailure | 'core_collision' } {
+    const entry = this.resolve(opOrRef);
+    if (entry === undefined) return { ok: false, reason: 'unknown' };
+    const outcome = graduateContract(entry.contract);
+    if (!outcome.graduated) return { ok: false, reason: outcome.reason };
+    const coreRef = contractRefToString(outcome.contract.ref);
+    if (this.entries.has(coreRef)) return { ok: false, reason: 'core_collision' };
+    this.entries.set(coreRef, { contract: outcome.contract, handler: entry.handler });
+    return { ok: true, ref: coreRef };
   }
 }
 
