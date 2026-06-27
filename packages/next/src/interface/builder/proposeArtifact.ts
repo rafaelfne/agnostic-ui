@@ -1,6 +1,8 @@
 import type { ConfigArtifactRef, IConfigStore, ILlm } from '../../application/ports';
 import { type ArtifactValidationOutcome, validateArtifactVersion } from '../../infra/store';
 
+import { buildGroundVocabulary } from './groundVocabulary';
+
 export interface ProposeOutcome {
   proposed: boolean;
   version?: number;
@@ -19,7 +21,8 @@ function isObjectBody(value: unknown): value is Record<string, unknown> {
  * **sem** publicar. A IA é só mais um editor — sua geração passa pelo MESMO portão
  * (`validateArtifactVersion`) e o MESMO store, e **nunca** publica. Uma proposta
  * inválida vira draft com motivo fail-closed, revisável, não publicado; uma config
- * não-parseável nem vira draft. O grounding (`context`) é preenchido em I.2.
+ * não-parseável nem vira draft. O `context` é o grounding tenant-scoped (I.2): o
+ * vocabulário (operadores + integrações + artefatos DO TENANT), sem valor de secret.
  */
 export async function proposeArtifactVersion(
   store: IConfigStore,
@@ -27,7 +30,8 @@ export async function proposeArtifactVersion(
   ref: ConfigArtifactRef,
   prompt: string,
 ): Promise<ProposeOutcome> {
-  const result = await llm.generate({ prompt });
+  const context = await buildGroundVocabulary(store, ref);
+  const result = await llm.generate({ prompt, context });
   if (!isObjectBody(result.config)) {
     return { proposed: false, rationale: result.rationale, error: 'no_proposal' };
   }
