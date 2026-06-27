@@ -17,13 +17,15 @@ describe('corpus de conformance (cross-renderer)', () => {
     expect(vectors.length).toBeGreaterThan(0);
   });
 
-  it.each(vectors)('$file casa com ConformanceVectorSchema e declara specVersion', ({ raw }) => {
+  it.each(vectors)('$file casa com ConformanceVectorSchema (kind + specVersion)', ({ raw }) => {
     const parsed = ConformanceVectorSchema.parse(raw);
+    expect(['template', 'operator', 'component']).toContain(parsed.kind);
     expect(parsed.specVersion.length).toBeGreaterThan(0);
   });
 
   it('rejeita chave desconhecida (.strict fecha o escape)', () => {
     const valid = {
+      kind: 'template',
       name: 'x',
       specVersion: '1.0',
       template: { type: 'text' },
@@ -32,5 +34,29 @@ describe('corpus de conformance (cross-renderer)', () => {
     };
     expect(() => ConformanceVectorSchema.parse(valid)).not.toThrow();
     expect(() => ConformanceVectorSchema.parse({ ...valid, stray: 1 })).toThrow();
+  });
+
+  it('aceita os kinds operator e component (shapes prontos p/ H5)', () => {
+    expect(() =>
+      ConformanceVectorSchema.parse({
+        kind: 'operator',
+        name: 'op',
+        specVersion: '1.0',
+        op: 'core.validate@1',
+        input: { customerId: 'c1' },
+        expected: { ok: true },
+      }),
+    ).not.toThrow();
+    expect(() =>
+      ConformanceVectorSchema.parse({
+        kind: 'component',
+        name: 'comp',
+        specVersion: '1.0',
+        component: 'card-balance',
+        props: { amount: '{{ x }}' },
+        context: { x: 'R$ 1' },
+        expected: { type: 'card-balance', props: { amount: 'R$ 1' } },
+      }),
+    ).not.toThrow();
   });
 });
