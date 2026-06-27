@@ -15,7 +15,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { evaluateExpression, resolveTemplate } from '../packages/engine/dist/index.js';
+import { evaluateExpression, resolveTemplate, runFlow } from '../packages/engine/dist/index.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const vectorsDir = join(root, 'packages/core/conformance/vectors');
@@ -94,8 +94,54 @@ for (const vector of vectors) {
   console.log(`  ${String(vector.name ?? '?').padEnd(20)} ${cells.join('  ')}`);
 }
 
+// 3) Operadores (engine-only, H5): executa cada vetor `operator` do corpus.
+const opsDir = join(root, 'packages/core/conformance/operators');
+const opVectors = existsSync(opsDir)
+  ? readdirSync(opsDir)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => JSON.parse(readFileSync(join(opsDir, file), 'utf8')))
+  : [];
+const live = { mode: 'live', tenantId: 'partnerco', customerId: 'cus_1' };
+
+console.log(`\nOperadores (engine) × ${opVectors.length} vetores:`);
+for (const v of opVectors) {
+  let ok = false;
+  try {
+    const flow = {
+      id: 'op',
+      name: v.name,
+      input: { from: 'request', pick: Object.keys(v.input ?? {}) },
+      steps: [v.step],
+      output: v.output,
+    };
+    const result = await runFlow(
+      flow,
+      { auth: live, request: v.input ?? {} },
+      { integrationRunner: { run: async () => v.integrationResult ?? {} } },
+    );
+    if (v.expect.errorKind !== undefined) {
+      ok = !result.ok && result.error.kind === v.expect.errorKind;
+    } else if (result.ok) {
+      ok = true;
+      if (v.expect.body !== undefined) ok = ok && agrees(result.body, v.expect.body);
+      if (v.expect.emits !== undefined) {
+        ok =
+          ok &&
+          agrees(
+            result.emitted.map((event) => event.event),
+            v.expect.emits,
+          );
+      }
+    }
+  } catch {
+    ok = false;
+  }
+  console.log(`  ${String(v.name ?? '?').padEnd(20)} engine:${ok ? 'ok' : 'DIVERGE'}`);
+  if (!ok) failures += 1;
+}
+
 if (failures > 0) {
   console.error(`\nconformance:check FALHOU — ${failures} problema(s).`);
   process.exit(1);
 }
-console.log('\nconformance:check OK — os 3 runners cobrem o corpus; renderers concordam.');
+console.log('\nconformance:check OK — corpus coberto; renderers + operadores concordam.');
