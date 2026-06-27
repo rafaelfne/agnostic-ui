@@ -2,8 +2,9 @@ import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { IAuthz } from '../application/ports';
+import type { IAuthz, LlmResult } from '../application/ports';
 import { SupabaseAuthz } from '../infra/authz/SupabaseAuthz';
+import { FakeLlm } from '../infra/llm/FakeLlm';
 import { type ConfigDatabase, DrizzleConfigStore } from '../infra/store/DrizzleConfigStore';
 import { applyMigrations } from '../infra/store/migrate';
 import { storeSchema } from '../infra/store/schema';
@@ -45,8 +46,14 @@ beforeEach(async () => {
 interface CallOpts {
   authz?: IAuthz;
   store?: BuilderDeps['store'];
+  llm?: BuilderDeps['llm'];
   body?: unknown;
   query?: string;
+}
+
+/** `ILlm` que devolve sempre a mesma config (a "geração" da IA), sem rede. */
+function llmReturning(config: unknown, rationale = 'porque sim'): FakeLlm {
+  return new FakeLlm((): LlmResult => ({ config, rationale }));
 }
 
 function call(method: string, path: string, opts: CallOpts = {}): Promise<Response> {
@@ -59,6 +66,7 @@ function call(method: string, path: string, opts: CallOpts = {}): Promise<Respon
   return handleBuilderRequest(new Request(url, init), path.split('/'), {
     store: opts.store === undefined ? store : opts.store,
     authz: opts.authz ?? editor,
+    llm: opts.llm ?? null,
   });
 }
 
@@ -189,5 +197,74 @@ describe('builder API — validation & errors', () => {
   it('404 for an unknown route', async () => {
     expect((await call('GET', 'whatever')).status).toBe(404);
     expect((await call('DELETE', 'artifacts/screen/home/versions')).status).toBe(404);
+  });
+});
+
+describe('builder API — AI proposal (I.1, fail-closed)', () => {
+  it('proposes a valid draft, validates it, but never publishes (AI is just an editor)', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      body: { prompt: 'tela de saudação' },
+      llm: llmReturning(validScreen),
+    });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ version: 1, valid: true, rationale: 'porque sim' });
+
+    // O draft existe…
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(1);
+    // …mas a IA NÃO publicou.
+    expect((await call('GET', 'artifacts/screen/home/published')).status).toBe(404);
+  });
+
+  it('saves an invalid proposal as a draft with the fail-closed reason, still unpublished', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      body: { prompt: 'algo quebrado' },
+      llm: llmReturning({ id: 'x' }), // objeto, mas falha o ScreenDefSchema
+    });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ version: 1, valid: false, error: 'invalid_artifact' });
+    expect((await call('GET', 'artifacts/screen/home/published')).status).toBe(404);
+  });
+
+  it('422 no_proposal when the AI returns no parseable config (no draft created)', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      body: { prompt: 'oi' },
+      llm: llmReturning(null),
+    });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'no_proposal' });
+    const versions = (await (
+      await call('GET', 'artifacts/screen/home/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(0);
+  });
+
+  it('503 when the AI is unavailable (no provider configured)', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      body: { prompt: 'oi' },
+      llm: null,
+    });
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: 'llm_unavailable' });
+  });
+
+  it('400 for an empty prompt', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      body: { prompt: '  ' },
+      llm: llmReturning(validScreen),
+    });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'invalid_prompt' });
+  });
+
+  it('401 when unauthenticated (proposing needs the editor role)', async () => {
+    const res = await call('POST', 'artifacts/screen/home/propose', {
+      authz: anon,
+      body: { prompt: 'oi' },
+      llm: llmReturning(validScreen),
+    });
+    expect(res.status).toBe(401);
   });
 });
