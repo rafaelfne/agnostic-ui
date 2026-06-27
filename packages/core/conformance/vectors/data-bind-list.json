@@ -1,5 +1,6 @@
 {
   "name": "data-bind-list",
+  "specVersion": "1.0",
   "description": "dataBind expande um filho por item da lista, com $item e $index.",
   "template": {
     "type": "list",

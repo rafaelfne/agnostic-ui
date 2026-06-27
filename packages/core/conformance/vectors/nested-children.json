@@ -1,5 +1,6 @@
 {
   "name": "nested-children",
+  "specVersion": "1.0",
   "description": "Recursão pela árvore: binding resolve dentro de children.",
   "template": {
     "type": "card",
