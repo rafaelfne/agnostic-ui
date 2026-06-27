@@ -1,5 +1,6 @@
 {
   "name": "comparison",
+  "specVersion": "1.0",
   "description": "Comparação resolve para booleano preservando o tipo.",
   "template": {
     "type": "row",

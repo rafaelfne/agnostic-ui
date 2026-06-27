@@ -17,7 +17,20 @@ describe('corpus de conformance (cross-renderer)', () => {
     expect(vectors.length).toBeGreaterThan(0);
   });
 
-  it.each(vectors)('$file casa com ConformanceVectorSchema', ({ raw }) => {
-    expect(() => ConformanceVectorSchema.parse(raw)).not.toThrow();
+  it.each(vectors)('$file casa com ConformanceVectorSchema e declara specVersion', ({ raw }) => {
+    const parsed = ConformanceVectorSchema.parse(raw);
+    expect(parsed.specVersion.length).toBeGreaterThan(0);
+  });
+
+  it('rejeita chave desconhecida (.strict fecha o escape)', () => {
+    const valid = {
+      name: 'x',
+      specVersion: '1.0',
+      template: { type: 'text' },
+      context: {},
+      expected: { type: 'text' },
+    };
+    expect(() => ConformanceVectorSchema.parse(valid)).not.toThrow();
+    expect(() => ConformanceVectorSchema.parse({ ...valid, stray: 1 })).toThrow();
   });
 });

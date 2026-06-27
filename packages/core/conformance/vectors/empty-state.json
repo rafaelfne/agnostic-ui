@@ -1,5 +1,6 @@
 {
   "name": "empty-state",
+  "specVersion": "1.0",
   "description": "Binding nas props de um componente especializado (empty-state).",
   "template": {
     "type": "empty-state",

@@ -1,5 +1,6 @@
 {
   "name": "conditional",
+  "specVersion": "1.0",
   "description": "Ternário inline: escolhe o rótulo conforme o context.",
   "template": {
     "type": "badge",
