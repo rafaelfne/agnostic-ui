@@ -8,7 +8,6 @@ import { evaluateExpression } from '../expression';
 import {
   type EngineServices,
   branchOperator,
-  buildDefaultRegistry,
   callIntegrationOperator,
   composeTemplateOperator,
   emitEventOperator,
@@ -149,18 +148,5 @@ describe('branch', () => {
   });
 });
 
-describe('buildDefaultRegistry', () => {
-  it('exposes exactly the audited operator set', () => {
-    const registry = buildDefaultRegistry();
-    expect(Object.keys(registry).sort()).toEqual(
-      [
-        'branch',
-        'call-integration',
-        'compose-template',
-        'emit-event',
-        'foreach',
-        'validate',
-      ].sort(),
-    );
-  });
-});
+// O registry fechado (`buildDefaultRegistry`) saiu em G8; o vocabulário agora é
+// auditado pelo registry governado (cf. `governance.parity.test.ts`).

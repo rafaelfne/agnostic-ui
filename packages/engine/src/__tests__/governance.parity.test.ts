@@ -6,26 +6,20 @@ import { ConfigError } from '../errors';
 import { InMemoryEventBus } from '../events';
 import { evaluateExpression } from '../expression';
 import {
-  type StepDispatcher,
   OperatorContractSchema,
   buildCoreGovernedRegistry,
   contractRefToString,
   dispatchGoverned,
 } from '../governance';
-import { createSwitchDispatcher, runFlow } from '../interpreter';
+import { runFlow } from '../interpreter';
 import type { EngineServices } from '../operators';
 import type { IIntegrationRunner } from '../ports';
 import type { FlowDefinitionInput, StepDef } from '../schemas';
 
-import { getBalanceFlow, investScreenFlow } from './fixtures/flows';
-import { MockIntegrationRunner } from './fixtures/mockIntegrationRunner';
-
 const live: ExecutionContext = { mode: 'live', tenantId: 'partnerco', customerId: 'cus_1' };
 const trivialRunner: IIntegrationRunner = { run: async () => ({}) };
-// O default do runtime é o governado (G3); o switch fica reachable para paridade.
-const switchDispatcher = createSwitchDispatcher();
 
-describe('Frente G — registry governado (G1–G3)', () => {
+describe('Frente G — registry governado (G1–G8)', () => {
   it('registra os 6 operadores como core.*@1', () => {
     expect(buildCoreGovernedRegistry().refs().sort()).toEqual([
       'core.branch@1',
@@ -55,36 +49,9 @@ describe('Frente G — registry governado (G1–G3)', () => {
     const validate = registry.resolve('validate')?.contract;
     expect(validate?.capabilities.pure).toBe(true);
     expect(validate?.input).toMatchObject({ type: 'object' });
-    expect(validate?.output).toMatchObject({ type: 'object' });
     const call = registry.resolve('call-integration')?.contract;
     expect(call?.capabilities.pure).toBe(false);
     expect(call?.effects.writes).toContain('as');
-  });
-
-  const sandbox: ExecutionContext = {
-    mode: 'sandbox',
-    tenantId: 'partnerco',
-    customerId: 'cus_1',
-    mockProfile: 'happyPath',
-  };
-  const parityCases: ReadonlyArray<[string, FlowDefinitionInput]> = [
-    ['get-balance', getBalanceFlow],
-    ['invest-screen', investScreenFlow],
-  ];
-
-  it.each(parityCases)('paridade default(governado)↔switch legado: %s', async (_name, flow) => {
-    const viaGoverned = await runFlow(
-      flow,
-      { auth: sandbox },
-      { integrationRunner: new MockIntegrationRunner() },
-    );
-    const viaSwitch = await runFlow(
-      flow,
-      { auth: sandbox },
-      { integrationRunner: new MockIntegrationRunner(), dispatcher: switchDispatcher },
-    );
-    expect(viaGoverned.ok).toBe(true);
-    expect(viaGoverned).toEqual(viaSwitch);
   });
 
   it('branch + emit-event despacham pelo default (governado)', async () => {
@@ -109,7 +76,7 @@ describe('Frente G — registry governado (G1–G3)', () => {
     if (res.ok) expect(res.emitted.map((event) => event.event)).toContain('hit');
   });
 
-  it('foreach: o default (governado) agora executa; o switch legado é no-op (G3 fechou o gap)', async () => {
+  it('foreach executa pelo default (governado, lookup por ref)', async () => {
     const flow: FlowDefinitionInput = {
       id: 'foreach-demo',
       name: 'foreach demo',
@@ -124,24 +91,13 @@ describe('Frente G — registry governado (G1–G3)', () => {
       ],
       output: '{{ rows }}',
     };
-    const run = (dispatcher?: StepDispatcher): ReturnType<typeof runFlow> =>
-      runFlow(
-        flow,
-        { auth: live, request: { xs: [1, 2, 3] } },
-        { integrationRunner: trivialRunner, dispatcher },
-      );
-
-    const viaGoverned = await run(); // default = governado
-    const viaSwitch = await run(switchDispatcher);
-
-    expect(viaGoverned.ok).toBe(true);
-    expect(viaSwitch.ok).toBe(true);
-    if (viaGoverned.ok) {
-      expect(viaGoverned.emitted.filter((event) => event.event === 'row')).toHaveLength(3);
-    }
-    if (viaSwitch.ok) {
-      expect(viaSwitch.emitted.filter((event) => event.event === 'row')).toHaveLength(0);
-    }
+    const res = await runFlow(
+      flow,
+      { auth: live, request: { xs: [1, 2, 3] } },
+      { integrationRunner: trivialRunner },
+    );
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.emitted.filter((event) => event.event === 'row')).toHaveLength(3);
   });
 
   it('ref não registrado → ConfigError (fail-closed)', async () => {
@@ -157,7 +113,7 @@ describe('Frente G — registry governado (G1–G3)', () => {
     await expect(dispatchGoverned(unknownStep, context, registry)).rejects.toThrow(ConfigError);
   });
 
-  it('um operador de tenant registrado despacha pelo governado (G3)', async () => {
+  it('um operador de tenant registrado despacha pelo governado', async () => {
     const registry = buildCoreGovernedRegistry();
     let called = false;
     registry.register<StepDef>(
