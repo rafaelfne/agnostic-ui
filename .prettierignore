@@ -10,3 +10,5 @@ packages/core/schema
 
 # Frente Dart/Flutter — toolchain separada (dart format / dart analyze)
 dart
+
+packages/core/conformance/spec.json

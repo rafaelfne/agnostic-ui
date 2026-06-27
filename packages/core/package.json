@@ -19,11 +19,13 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./conformance/spec.json": "./conformance/spec.json"
   },
   "files": [
     "dist",
-    "schema"
+    "schema",
+    "conformance/spec.json"
   ],
   "scripts": {
     "build": "tsup",
@@ -33,7 +35,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "gen:schema": "node scripts/gen-json-schema.mjs",
-    "gen:schema:check": "node scripts/gen-json-schema.mjs --check"
+    "gen:schema:check": "node scripts/gen-json-schema.mjs --check",
+    "gen:conformance": "node scripts/gen-conformance-spec.mjs",
+    "gen:conformance:check": "node scripts/gen-conformance-spec.mjs --check"
   },
   "dependencies": {
     "zod": "^3.25.0"
