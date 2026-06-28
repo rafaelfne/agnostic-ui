@@ -1,7 +1,9 @@
 import {
+  ComponentContractSchema,
   EventDefSchema,
   HookDefSchema,
   IntegrationDefinitionSchema,
+  OperatorContractSchema,
   ScreenDefSchema,
 } from '@yukilabs/agnostic-ui-engine';
 import type { ZodTypeAny } from 'zod';
@@ -34,6 +36,9 @@ const SCHEMA_BY_KIND: Record<Exclude<ConfigArtifactKind, 'flow'>, ZodTypeAny> = 
   screen: ScreenDefSchema,
   event: EventDefSchema,
   hook: HookDefSchema,
+  // Contratos de extensão de tenant (Fase J): publish valida que são bem-formados.
+  operator: OperatorContractSchema,
+  component: ComponentContractSchema,
 };
 
 /**
@@ -56,6 +61,19 @@ export async function validateArtifactVersion(
   const parsed = SCHEMA_BY_KIND[ref.kind].safeParse(target.body);
   if (!parsed.success) {
     return { valid: false, error: 'invalid_artifact', detail: parsed.error.message };
+  }
+
+  // Extensão deve ser namespaced pelo PRÓPRIO tenant (anti-spoof, Fase J): um tenant não
+  // pode publicar `<outro>.*`. Vale também p/ a proposta da IA (mesmo portão).
+  if (ref.kind === 'operator' || ref.kind === 'component') {
+    const { namespace } = (parsed.data as { ref: { namespace: string } }).ref;
+    if (namespace !== ref.tenantId) {
+      return {
+        valid: false,
+        error: 'invalid_artifact',
+        detail: `extension namespace '${namespace}' must equal the tenant '${ref.tenantId}'`,
+      };
+    }
   }
   return { valid: true };
 }

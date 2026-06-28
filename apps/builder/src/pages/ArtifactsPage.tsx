@@ -1,10 +1,12 @@
 import {
   Blocks,
   CheckCircle2,
+  Component,
   FileEdit,
   Link2,
   MonitorSmartphone,
   Plus,
+  Puzzle,
   Workflow,
   Zap,
 } from 'lucide-react';
@@ -34,7 +36,15 @@ import {
 import { useI18n } from '@/i18n/i18n';
 import { cn } from '@/lib/utils';
 
-const KINDS: ArtifactKind[] = ['flow', 'screen', 'integration', 'event', 'hook'];
+const KINDS: ArtifactKind[] = [
+  'flow',
+  'screen',
+  'integration',
+  'event',
+  'hook',
+  'operator',
+  'component',
+];
 
 const KIND_ICON: Record<ArtifactKind, ReactNode> = {
   flow: <Workflow className="size-4" />,
@@ -42,6 +52,8 @@ const KIND_ICON: Record<ArtifactKind, ReactNode> = {
   integration: <Blocks className="size-4" />,
   event: <Zap className="size-4" />,
   hook: <Link2 className="size-4" />,
+  operator: <Puzzle className="size-4" />,
+  component: <Component className="size-4" />,
 };
 
 type Ready = { status: 'ready'; artifacts: ArtifactSummary[]; withIssue: number };

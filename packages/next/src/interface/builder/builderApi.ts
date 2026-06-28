@@ -23,6 +23,8 @@ const ARTIFACT_KINDS: readonly ConfigArtifactKind[] = [
   'screen',
   'event',
   'hook',
+  'operator',
+  'component',
 ];
 
 function json(status: number, body: unknown): Response {

@@ -420,3 +420,82 @@ describe('builder API — AI proposal (I.1, fail-closed)', () => {
     expect(prompts[1]).toBe('crie X'); // 2ª chamada = geração (prompt do usuário)
   });
 });
+
+describe('builder API — extension store (Fase J)', () => {
+  const validOperator = {
+    ref: { namespace: 'partnerco', name: 'discount', version: 1 },
+    input: {},
+    output: {},
+    capabilities: {},
+    effects: {},
+    conformance: { fixtures: ['partnerco/discount.ok'] },
+  };
+  const validComponent = {
+    ref: { namespace: 'partnerco', name: 'chip', version: 1 },
+    props: {},
+    renderOnly: true,
+    conformance: { fixtures: ['partnerco/chip.ok'] },
+  };
+
+  it('stores, lists and publishes a tenant operator extension (validated fail-closed)', async () => {
+    expect(
+      (await call('POST', 'artifacts/operator/discount/versions', { body: validOperator })).status,
+    ).toBe(201);
+
+    const list = (await (
+      await call('GET', 'artifacts', { query: '?kind=operator' })
+    ).json()) as Array<{
+      kind: string;
+      slug: string;
+    }>;
+    expect(list).toMatchObject([{ kind: 'operator', slug: 'discount' }]);
+
+    const pub = await call('POST', 'artifacts/operator/discount/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(pub.status).toBe(200);
+    expect(await (await call('GET', 'artifacts/operator/discount/published')).json()).toMatchObject(
+      {
+        ref: { namespace: 'partnerco', name: 'discount' },
+      },
+    );
+  });
+
+  it('422 fail-closed when publishing a malformed operator extension', async () => {
+    await store.saveDraft(
+      { tenantId: 'partnerco', kind: 'operator', slug: 'broken' },
+      { ref: { namespace: 'x' } },
+    );
+    const res = await call('POST', 'artifacts/operator/broken/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'invalid_artifact' });
+  });
+
+  it('also stores and publishes a tenant component extension', async () => {
+    expect(
+      (await call('POST', 'artifacts/component/chip/versions', { body: validComponent })).status,
+    ).toBe(201);
+    const pub = await call('POST', 'artifacts/component/chip/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(pub.status).toBe(200);
+  });
+
+  it('rejects publishing an extension whose namespace is not the tenant (anti-spoof)', async () => {
+    await store.saveDraft(
+      { tenantId: 'partnerco', kind: 'operator', slug: 'spoof' },
+      { ...validOperator, ref: { namespace: 'otherco', name: 'spoof', version: 1 } },
+    );
+    const res = await call('POST', 'artifacts/operator/spoof/publish', {
+      authz: publisher,
+      body: { version: 1 },
+    });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'invalid_artifact' });
+  });
+});
