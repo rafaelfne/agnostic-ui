@@ -499,3 +499,95 @@ describe('builder API — extension store (Fase J)', () => {
     expect(await res.json()).toMatchObject({ error: 'invalid_artifact' });
   });
 });
+
+describe('builder API — graduation request (Fase J, etapa RFC)', () => {
+  const provenOperator = {
+    ref: { namespace: 'partnerco', name: 'discount', version: 1 },
+    input: {},
+    output: {},
+    capabilities: {},
+    effects: {},
+    conformance: { fixtures: ['partnerco/discount.ok'] },
+  };
+
+  async function publishOperator(slug: string, body: unknown): Promise<void> {
+    await store.saveDraft({ tenantId: 'partnerco', kind: 'operator', slug }, body);
+    await call('POST', `artifacts/operator/${slug}/publish`, {
+      authz: publisher,
+      body: { version: 1 },
+    });
+  }
+
+  it('records a graduation request as a draft of the core contract (proven extension)', async () => {
+    await publishOperator('discount', provenOperator);
+    const res = await call('POST', 'artifacts/operator/discount/graduate', { authz: publisher });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ requested: true, ref: 'core.discount@1' });
+
+    // o pedido virou um draft v2 com o contrato core…
+    const versions = (await (
+      await call('GET', 'artifacts/operator/discount/versions')
+    ).json()) as Array<{ version: number; body: { ref: { namespace: string } } }>;
+    expect(versions).toHaveLength(2);
+    expect(versions.find((v) => v.version === 2)?.body.ref.namespace).toBe('core');
+
+    // …mas o tenant NÃO consegue publicá-lo (anti-spoof barra core != tenant):
+    // a promoção final ao core é ação da plataforma.
+    const pub = await call('POST', 'artifacts/operator/discount/publish', {
+      authz: publisher,
+      body: { version: 2 },
+    });
+    expect(pub.status).toBe(422);
+  });
+
+  it('422 graduation_not_proven for an uncertified (experimental) extension', async () => {
+    await publishOperator('raw', {
+      ...provenOperator,
+      ref: { namespace: 'partnerco', name: 'raw', version: 1 },
+      conformance: { fixtures: [] },
+    });
+    const res = await call('POST', 'artifacts/operator/raw/graduate', { authz: publisher });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'graduation_not_proven' });
+  });
+
+  it('422 not_published when the extension has no published version', async () => {
+    await store.saveDraft(
+      { tenantId: 'partnerco', kind: 'operator', slug: 'draftonly' },
+      provenOperator,
+    );
+    const res = await call('POST', 'artifacts/operator/draftonly/graduate', { authz: publisher });
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: 'not_published' });
+  });
+
+  it('is idempotent: a second request returns the existing draft, no duplicate', async () => {
+    await publishOperator('discount', provenOperator);
+    expect(
+      (await call('POST', 'artifacts/operator/discount/graduate', { authz: publisher })).status,
+    ).toBe(201);
+    const second = await call('POST', 'artifacts/operator/discount/graduate', { authz: publisher });
+    expect(second.status).toBe(200);
+    expect(await second.json()).toMatchObject({ requested: true, version: 2 });
+
+    const versions = (await (
+      await call('GET', 'artifacts/operator/discount/versions')
+    ).json()) as unknown[];
+    expect(versions).toHaveLength(2); // v1 published + v2 request, sem duplicata
+  });
+
+  it('400 for graduating a non-operator kind (screen, component)', async () => {
+    expect(
+      (await call('POST', 'artifacts/screen/home/graduate', { authz: publisher })).status,
+    ).toBe(400);
+    expect(
+      (await call('POST', 'artifacts/component/chip/graduate', { authz: publisher })).status,
+    ).toBe(400);
+  });
+
+  it('403 when an editor (not publisher) requests graduation', async () => {
+    await publishOperator('discount', provenOperator);
+    const res = await call('POST', 'artifacts/operator/discount/graduate', { authz: editor });
+    expect(res.status).toBe(403);
+  });
+});
