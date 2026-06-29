@@ -12,9 +12,13 @@ import {
 } from 'lucide-react';
 import { type ReactElement, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
+import { BuilderApiError } from '../api/client';
 import type { ArtifactKind, ArtifactSummary } from '../api/types';
 import { useBuilderClient } from '../api/useBuilderClient';
+import { useAuth } from '../auth/AuthContext';
+import { canPublish } from '../auth/roles';
 import { validateFlow } from '../flows/flowModel';
 import {
   ArtifactsByTypeChart,
@@ -62,8 +66,27 @@ type LoadState = { status: 'loading' } | { status: 'error'; message: string } | 
 export function ArtifactsPage(): ReactElement {
   const client = useBuilderClient();
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const mayPublish = canPublish(token);
   const { t } = useI18n();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+
+  async function handleGraduate(slug: string): Promise<void> {
+    try {
+      const result = await client.graduate(slug);
+      toast.success(`Graduation requested: ${result.ref}`, {
+        description: 'Recorded as a draft — the final core promotion is a platform action.',
+      });
+    } catch (caught) {
+      const reason =
+        caught instanceof BuilderApiError
+          ? caught.code
+          : caught instanceof Error
+            ? caught.message
+            : 'error';
+      toast.error(`Graduation blocked: ${reason}`);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -127,7 +150,9 @@ export function ArtifactsPage(): ReactElement {
         <DashboardBody
           artifacts={state.artifacts}
           withIssue={state.withIssue}
+          mayPublish={mayPublish}
           onOpenFlow={(slug) => navigate(`/flows/${encodeURIComponent(slug)}`)}
+          onGraduate={(slug) => void handleGraduate(slug)}
         />
       )}
     </div>
@@ -141,11 +166,15 @@ function weekdayLabel(date: Date): string {
 function DashboardBody({
   artifacts,
   withIssue,
+  mayPublish,
   onOpenFlow,
+  onGraduate,
 }: {
   artifacts: ArtifactSummary[];
   withIssue: number;
+  mayPublish: boolean;
   onOpenFlow: (slug: string) => void;
+  onGraduate: (slug: string) => void;
 }): ReactElement {
   const { t } = useI18n();
   const [filter, setFilter] = useState<'all' | ArtifactKind>('all');
@@ -339,9 +368,23 @@ function DashboardBody({
                   {a.publishedVersion !== null ? `v${a.publishedVersion}` : '—'}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge variant={a.publishedVersion !== null ? 'success' : 'warning'}>
-                    {a.publishedVersion !== null ? t('status.published') : t('status.draft')}
-                  </Badge>
+                  <div className="flex items-center justify-end gap-2">
+                    {a.kind === 'operator' && a.publishedVersion !== null && mayPublish && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onGraduate(a.slug);
+                        }}
+                      >
+                        Request graduation
+                      </Button>
+                    )}
+                    <Badge variant={a.publishedVersion !== null ? 'success' : 'warning'}>
+                      {a.publishedVersion !== null ? t('status.published') : t('status.draft')}
+                    </Badge>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

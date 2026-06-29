@@ -1,3 +1,9 @@
+import {
+  OperatorContractSchema,
+  contractRefToString,
+  graduateContract,
+} from '@yukilabs/agnostic-ui-core';
+
 import type {
   BuilderRole,
   ConfigArtifactKind,
@@ -77,6 +83,7 @@ async function authorize(
  *   POST artifacts/:kind/:slug/versions  {body}   → save draft → 201 { version }
  *   POST artifacts/:kind/:slug/publish   {version} → publish/rollback (fail-closed)
  *   POST artifacts/:kind/:slug/propose   {prompt}  → IA gera draft + valida sem publicar
+ *   POST artifacts/operator/:slug/graduate         → registra pedido de graduação (RFC, publisher)
  */
 export async function handleBuilderRequest(
   request: Request,
@@ -163,6 +170,45 @@ export async function handleBuilderRequest(
         resolution: outcome.triage?.resolution,
         rationale: outcome.rationale,
       });
+    }
+
+    if (method === 'POST' && action === 'graduate') {
+      const gate = await authorize(authz, request, 'publisher');
+      if (gate instanceof Response) return gate;
+      if (kind !== 'operator') return fail(400, 'graduation_unsupported_kind');
+      const ref: ConfigArtifactRef = { tenantId: gate.tenantId, kind, slug };
+      const published = await store.getPublished(ref);
+      if (published === null) return fail(422, 'not_published');
+      const parsed = OperatorContractSchema.safeParse(published);
+      if (!parsed.success) return fail(422, 'invalid_artifact', parsed.error.message);
+      // RFC → graduate (J.4): só `proven` gradua (fail-closed, via J.1). O pedido é
+      // gravado como DRAFT do contrato `core.*` — visível, mas o tenant não consegue
+      // publicá-lo (o anti-spoof do J.3 barra `namespace 'core' !== tenant`): a promoção
+      // final ao core é ação da plataforma.
+      const result = graduateContract(parsed.data);
+      if (!result.graduated) return fail(422, `graduation_${result.reason}`);
+      const graduatedRef = contractRefToString(result.contract.ref);
+
+      // Idempotente: se o último draft já É o contrato graduado, devolve-o (não empilha
+      // pedidos duplicados a cada clique).
+      const versions = await store.listVersions(ref);
+      const latest = versions.reduce<(typeof versions)[number] | undefined>(
+        (max, candidate) =>
+          max === undefined || candidate.version > max.version ? candidate : max,
+        undefined,
+      );
+      const latestRef = (latest?.body as { ref?: typeof result.contract.ref } | undefined)?.ref;
+      if (
+        latest !== undefined &&
+        latestRef?.namespace === result.contract.ref.namespace &&
+        latestRef.name === result.contract.ref.name &&
+        latestRef.version === result.contract.ref.version
+      ) {
+        return json(200, { requested: true, version: latest.version, ref: graduatedRef });
+      }
+
+      const version = await store.saveDraft(ref, result.contract);
+      return json(201, { requested: true, version, ref: graduatedRef });
     }
   }
 
