@@ -1,4 +1,10 @@
-import type { ArtifactKind, ArtifactSummary, ArtifactVersion, ProposeResult } from './types';
+import type {
+  ArtifactKind,
+  ArtifactSummary,
+  ArtifactVersion,
+  GraduationRequest,
+  ProposeResult,
+} from './types';
 
 /** A non-2xx response from the builder API; carries the canonical `error` code. */
 export class BuilderApiError extends Error {
@@ -36,6 +42,12 @@ export interface BuilderApiClient {
    * rejects fail-closed (e.g. triage blocked, AI unavailable) without a draft.
    */
   propose(kind: ArtifactKind, slug: string, prompt: string): Promise<ProposeResult>;
+  /**
+   * Requests graduation of a proven operator extension to `core.*` (Fase J, etapa RFC).
+   * Records the request as a draft of the core contract; rejects fail-closed (e.g. not
+   * proven, not published) without a record.
+   */
+  graduate(slug: string): Promise<GraduationRequest>;
 }
 
 interface ApiErrorBody {
@@ -116,6 +128,12 @@ export function createBuilderClient(config: BuilderClientConfig): BuilderApiClie
       const res = await request('POST', `artifacts/${kind}/${enc(slug)}/propose`, { prompt });
       if (!res.ok) return fail(res);
       return (await res.json()) as ProposeResult;
+    },
+
+    async graduate(slug) {
+      const res = await request('POST', `artifacts/operator/${enc(slug)}/graduate`, {});
+      if (!res.ok) return fail(res);
+      return (await res.json()) as GraduationRequest;
     },
   };
 }

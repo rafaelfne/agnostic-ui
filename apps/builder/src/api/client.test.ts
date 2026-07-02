@@ -131,4 +131,23 @@ describe('createBuilderClient', () => {
       code: 'triage_blocked',
     });
   });
+
+  it('requests graduation (POST operator/:slug/graduate) and returns the record', async () => {
+    const record = { requested: true, version: 2, ref: 'core.discount@1' };
+    const { fn, calls } = stubFetch(() => jsonResponse(201, record));
+    const client = createBuilderClient({ getToken: () => token, fetch: fn });
+
+    expect(await client.graduate('discount')).toEqual(record);
+    expect(calls[0]?.url).toBe('/api/builder/artifacts/operator/discount/graduate');
+    expect(calls[0]?.init.method).toBe('POST');
+  });
+
+  it('rejects fail-closed when graduation is blocked (422 not proven)', async () => {
+    const { fn } = stubFetch(() => jsonResponse(422, { error: 'graduation_not_proven' }));
+    const client = createBuilderClient({ getToken: () => token, fetch: fn });
+    await expect(client.graduate('raw')).rejects.toMatchObject({
+      status: 422,
+      code: 'graduation_not_proven',
+    });
+  });
 });
