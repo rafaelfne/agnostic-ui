@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   Link2,
   LogOut,
+  MonitorSmartphone,
   Search,
   Workflow,
   Zap,
@@ -66,6 +67,7 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
   const { pathname } = useLocation();
   const onArtifacts = pathname === '/';
   const onFlows = pathname.startsWith('/flows');
+  const onScreens = pathname.startsWith('/screens');
 
   const crumbs =
     pathname === '/'
@@ -74,7 +76,11 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         ? [t('nav.workspace'), t('nav.flows')]
         : pathname.startsWith('/flows/')
           ? [t('nav.flows'), decodeURIComponent(pathname.split('/flows/')[1] ?? '')]
-          : [t('dash.title')];
+          : pathname === '/screens'
+            ? [t('nav.workspace'), t('nav.screens')]
+            : pathname.startsWith('/screens/')
+              ? [t('nav.screens'), decodeURIComponent(pathname.split('/screens/')[1] ?? '')]
+              : [t('dash.title')];
 
   return (
     <div className="flex min-h-screen">
@@ -111,6 +117,12 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
               icon={<Workflow />}
               label={t('nav.flows')}
               badge="4"
+            />
+            <NavItem
+              to="/screens"
+              active={onScreens}
+              icon={<MonitorSmartphone />}
+              label={t('nav.screens')}
             />
           </div>
           <p className="px-2.5 pb-2 pt-5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">

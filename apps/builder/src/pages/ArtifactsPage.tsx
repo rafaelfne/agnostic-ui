@@ -152,6 +152,7 @@ export function ArtifactsPage(): ReactElement {
           withIssue={state.withIssue}
           mayPublish={mayPublish}
           onOpenFlow={(slug) => navigate(`/flows/${encodeURIComponent(slug)}`)}
+          onOpenScreen={(slug) => navigate(`/screens/${encodeURIComponent(slug)}`)}
           onGraduate={(slug) => void handleGraduate(slug)}
         />
       )}
@@ -168,12 +169,14 @@ function DashboardBody({
   withIssue,
   mayPublish,
   onOpenFlow,
+  onOpenScreen,
   onGraduate,
 }: {
   artifacts: ArtifactSummary[];
   withIssue: number;
   mayPublish: boolean;
   onOpenFlow: (slug: string) => void;
+  onOpenScreen: (slug: string) => void;
   onGraduate: (slug: string) => void;
 }): ReactElement {
   const { t } = useI18n();
@@ -351,8 +354,14 @@ function DashboardBody({
             {rows.map((a) => (
               <TableRow
                 key={`${a.kind}:${a.slug}`}
-                className={a.kind === 'flow' ? 'cursor-pointer' : ''}
-                onClick={a.kind === 'flow' ? () => onOpenFlow(a.slug) : undefined}
+                className={a.kind === 'flow' || a.kind === 'screen' ? 'cursor-pointer' : ''}
+                onClick={
+                  a.kind === 'flow'
+                    ? () => onOpenFlow(a.slug)
+                    : a.kind === 'screen'
+                      ? () => onOpenScreen(a.slug)
+                      : undefined
+                }
               >
                 <TableCell>
                   <div className="flex items-center gap-2.5">
