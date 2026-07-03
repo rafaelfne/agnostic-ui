@@ -1,6 +1,6 @@
 import type { TemplateNode } from '@yukilabs/agnostic-ui-core';
 import { SduiRenderer, shadcnRegistry } from '@yukilabs/agnostic-ui-react';
-import { type ReactElement, useCallback, useEffect, useState } from 'react';
+import { type ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlertCircle, ArrowLeft, CheckCircle2, LayoutList, Play, Rocket, Save } from 'lucide-react';
@@ -28,7 +28,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useI18n } from '@/i18n/i18n';
 
+import { NodeInspector } from './NodeInspector';
+import { Palette } from './Palette';
+import { ScreenCanvas } from './ScreenCanvas';
+import { type CanvasContext, NEW_MIME, PATH_MIME } from './canvasRegistry';
+import {
+  type NodePath,
+  buildPathIndex,
+  childrenOf,
+  getNodeAt,
+  insertNodeAt,
+  moveNode,
+  parsePath,
+  pathToString,
+  removeNodeAt,
+  updateNodeAt,
+} from './nodePath';
 import { type ScreenDraft, emptyScreen, validateScreen } from './screenModel';
+import { CONTAINER_TYPES, emptyNode } from './screenVocabulary';
 
 function describeError(caught: unknown): string {
   if (caught instanceof BuilderApiError) {
@@ -62,10 +79,104 @@ export function ScreenEditorPage(): ReactElement {
   const [flows, setFlows] = useState<ArtifactSummary[]>([]);
   const [rootText, setRootText] = useState('');
   const [rootError, setRootError] = useState<string | null>(null);
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
 
   const refreshVersions = useCallback(async () => {
     setVersions(await client.listVersions('screen', slug));
   }, [client, slug]);
+
+  /** Muta o `root` (via ops imutáveis) e ressincroniza o JSON de escape. */
+  const mutateRoot = useCallback((fn: (root: TemplateNode) => TemplateNode): void => {
+    setDraft((current) => {
+      if (current === null) return current;
+      const root = fn(current.root as TemplateNode);
+      setRootText(JSON.stringify(root, null, 2));
+      setRootError(null);
+      return { ...current, root };
+    });
+  }, []);
+
+  const handleSelect = useCallback((path: string | null): void => setSelectedPath(path), []);
+  const handleRemove = useCallback(
+    (path: string): void => {
+      mutateRoot((root) => removeNodeAt(root, parsePath(path)));
+      setSelectedPath(null);
+    },
+    [mutateRoot],
+  );
+  const handlePatchProps = useCallback(
+    (path: string, props: Record<string, unknown>): void =>
+      mutateRoot((root) => updateNodeAt(root, parsePath(path), (node) => ({ ...node, props }))),
+    [mutateRoot],
+  );
+  const handlePatchNode = useCallback(
+    (path: string, patch: Partial<TemplateNode>): void =>
+      mutateRoot((root) => updateNodeAt(root, parsePath(path), (node) => ({ ...node, ...patch }))),
+    [mutateRoot],
+  );
+  const handleDrop = useCallback(
+    (data: DataTransfer, parentPath: string, index: number): void => {
+      const parent = parsePath(parentPath);
+      const newType = data.getData(NEW_MIME);
+      if (newType !== '') {
+        const node = emptyNode(newType);
+        if (node !== undefined) {
+          mutateRoot((root) => insertNodeAt(root, parent, index, node));
+          setSelectedPath(pathToString([...parent, index]));
+        }
+        return;
+      }
+      const fromStr = data.getData(PATH_MIME);
+      if (fromStr !== '') {
+        const from = parsePath(fromStr);
+        mutateRoot((root) => {
+          const moved = getNodeAt(root, from); // mesma ref é reinserida por moveNode
+          const next = moveNode(root, from, parent, index);
+          // path exato do nó movido (moveNode ajusta índices) — sem replicar a matemática
+          setSelectedPath(moved !== undefined ? (buildPathIndex(next).get(moved) ?? null) : null);
+          return next;
+        });
+      }
+    },
+    [mutateRoot],
+  );
+  const handleAdd = useCallback(
+    (type: string): void => {
+      const node = emptyNode(type);
+      if (node === undefined) return;
+      mutateRoot((root) => {
+        let parentPath: NodePath = [];
+        if (selectedPath !== null) {
+          const selNode = getNodeAt(root, parsePath(selectedPath));
+          parentPath =
+            selNode !== undefined && CONTAINER_TYPES.has(selNode.type)
+              ? parsePath(selectedPath)
+              : parsePath(selectedPath).slice(0, -1);
+        }
+        const parent = getNodeAt(root, parentPath);
+        const index = parent !== undefined ? childrenOf(parent).length : 0;
+        setSelectedPath(pathToString([...parentPath, index]));
+        return insertNodeAt(root, parentPath, index, node);
+      });
+    },
+    [mutateRoot, selectedPath],
+  );
+
+  const rootNode = draft?.root as TemplateNode | undefined;
+  const pathIndex = useMemo(
+    () => (rootNode ? buildPathIndex(rootNode) : new WeakMap<TemplateNode, string>()),
+    [rootNode],
+  );
+  const canvasCtx = useMemo<CanvasContext>(
+    () => ({
+      pathIndex,
+      selectedPath,
+      onSelect: handleSelect,
+      onRemove: handleRemove,
+      onDrop: handleDrop,
+    }),
+    [pathIndex, selectedPath, handleSelect, handleRemove, handleDrop],
+  );
 
   useEffect(() => {
     let active = true;
@@ -233,122 +344,123 @@ export function ScreenEditorPage(): ReactElement {
         </div>
       </div>
 
-      {/* TAB: DESIGN */}
-      <TabsContent value="design" className="mx-auto w-full max-w-[1180px] px-8 pb-14 pt-6">
-        <div className="mb-4 grid gap-3.5 lg:grid-cols-2">
-          <Card className="p-4.5">
-            <h3 className="mb-3.5 flex items-center gap-2 text-sm font-semibold">
-              <span className="size-1.5 rounded-full bg-primary" />
-              {t('editor.general')}
-            </h3>
-            <div className="grid gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="screen-id" className="text-xs">
-                    id
-                  </Label>
-                  <Input
-                    id="screen-id"
-                    value={draft.id ?? ''}
-                    onChange={(e) => update({ id: e.target.value })}
-                    className="font-mono"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="screen-route" className="text-xs">
-                    {t('screens.route')}
-                  </Label>
-                  <Input
-                    id="screen-route"
-                    value={draft.route ?? ''}
-                    onChange={(e) => update({ route: e.target.value })}
-                    className="font-mono"
-                    placeholder="/home"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-xs">{t('screens.dataFlow')}</Label>
-                <Select value={draft.dataFlow ?? ''} onValueChange={(v) => update({ dataFlow: v })}>
-                  <SelectTrigger className="font-mono">
-                    <SelectValue placeholder="—" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* o valor atual sempre é uma opção, mesmo sem flow correspondente */}
-                    {draft.dataFlow !== undefined &&
-                      draft.dataFlow !== '' &&
-                      !flows.some((f) => f.slug === draft.dataFlow) && (
-                        <SelectItem value={draft.dataFlow} className="font-mono">
-                          {draft.dataFlow} — {t('screens.flowMissing')}
-                        </SelectItem>
-                      )}
-                    {flows.map((flow) => (
-                      <SelectItem key={flow.slug} value={flow.slug} className="font-mono">
-                        {flow.slug}
-                        {flow.publishedVersion === null ? ` — ${t('status.draft')}` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{t('screens.dataFlowHint')}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4.5">
-            <h3 className="mb-3.5 flex items-center gap-2 text-sm font-semibold">
-              <span className="size-1.5 rounded-full bg-primary" />
-              {t('editor.validation')}
-            </h3>
-            {validation.ok ? (
-              <p className="flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle2 className="size-4" /> {t('editor.valid')}
-              </p>
-            ) : (
-              <>
-                <p className="mb-2 flex items-center gap-2 text-sm text-destructive">
-                  <AlertCircle className="size-4" />
-                  {t('editor.invalid', { n: validation.issues.length })}
-                </p>
-                <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
-                  {validation.issues.map((issue, i) => (
-                    <li key={i}>
-                      <code className="font-mono text-destructive">{issue.path}</code> —{' '}
-                      {issue.message}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </Card>
+      {/* TAB: DESIGN — editor WYSIWYG (paleta · canvas · inspector) */}
+      <TabsContent value="design" className="flex w-full flex-col gap-4 px-6 pb-14 pt-4">
+        {/* barra de settings da tela + status de validação */}
+        <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-3">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="screen-id" className="text-[11px] text-muted-foreground">
+              id
+            </Label>
+            <Input
+              id="screen-id"
+              value={draft.id ?? ''}
+              onChange={(e) => update({ id: e.target.value })}
+              className="h-8 w-36 font-mono text-xs"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="screen-route" className="text-[11px] text-muted-foreground">
+              {t('screens.route')}
+            </Label>
+            <Input
+              id="screen-route"
+              value={draft.route ?? ''}
+              onChange={(e) => update({ route: e.target.value })}
+              className="h-8 w-44 font-mono text-xs"
+              placeholder="/home"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-[11px] text-muted-foreground">{t('screens.dataFlow')}</Label>
+            <Select value={draft.dataFlow ?? ''} onValueChange={(v) => update({ dataFlow: v })}>
+              <SelectTrigger className="h-8 w-52 font-mono text-xs">
+                <SelectValue placeholder="—" />
+              </SelectTrigger>
+              <SelectContent>
+                {draft.dataFlow !== undefined &&
+                  draft.dataFlow !== '' &&
+                  !flows.some((f) => f.slug === draft.dataFlow) && (
+                    <SelectItem value={draft.dataFlow} className="font-mono text-xs">
+                      {draft.dataFlow} — {t('screens.flowMissing')}
+                    </SelectItem>
+                  )}
+                {flows.map((flow) => (
+                  <SelectItem key={flow.slug} value={flow.slug} className="font-mono text-xs">
+                    {flow.slug}
+                    {flow.publishedVersion === null ? ` — ${t('status.draft')}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {validation.ok ? (
+            <span className="ml-auto flex items-center gap-1.5 text-xs text-green-700">
+              <CheckCircle2 className="size-3.5" /> {t('editor.valid')}
+            </span>
+          ) : (
+            <span className="ml-auto flex items-center gap-1.5 text-xs text-destructive">
+              <AlertCircle className="size-3.5" />
+              {t('editor.invalid', { n: validation.issues.length })}
+            </span>
+          )}
         </div>
 
-        <Card className="mb-4 p-4.5">
-          <h3 className="mb-3.5 flex items-center gap-2 text-sm font-semibold">
-            <span className="size-1.5 rounded-full bg-primary" />
-            {t('screens.rootJson')}
-          </h3>
-          <Textarea
-            value={rootText}
-            onChange={(e) => onRootText(e.target.value)}
-            rows={18}
-            className="font-mono text-xs"
-            spellCheck={false}
+        {/* editor de 3 colunas */}
+        <div className="grid h-[640px] grid-cols-[15rem_1fr_20rem] overflow-hidden rounded-xl border bg-card">
+          <Palette onAdd={handleAdd} />
+          <ScreenCanvas ctx={canvasCtx} root={draft.root as TemplateNode} />
+          <NodeInspector
+            root={draft.root as TemplateNode}
+            path={selectedPath}
+            onPatchProps={handlePatchProps}
+            onPatchNode={handlePatchNode}
+            onSelect={handleSelect}
+            onRemove={handleRemove}
           />
-          {rootError !== null && (
-            <p className="mt-2 text-xs text-destructive">
-              {t('screens.invalidJson')}: {rootError}
-            </p>
-          )}
-          <p className="mt-2 text-xs text-muted-foreground">{t('screens.rootJsonHint')}</p>
-        </Card>
+        </div>
 
-        <VersionsTable
-          versions={versions}
-          busy={busy}
-          mayPublish={mayPublish}
-          onPublish={(version) => void publishExisting(version)}
-        />
+        <div className="space-y-4">
+          {!validation.ok && (
+            <Card className="border-destructive/30 bg-destructive/5 p-4">
+              <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+                {validation.issues.map((issue, i) => (
+                  <li key={i}>
+                    <code className="font-mono text-destructive">{issue.path}</code> —{' '}
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          <details className="rounded-xl border bg-card">
+            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-muted-foreground">
+              {t('screens.rootJson')}
+            </summary>
+            <div className="p-4 pt-0">
+              <Textarea
+                value={rootText}
+                onChange={(e) => onRootText(e.target.value)}
+                rows={16}
+                className="font-mono text-xs"
+                spellCheck={false}
+              />
+              {rootError !== null && (
+                <p className="mt-2 text-xs text-destructive">
+                  {t('screens.invalidJson')}: {rootError}
+                </p>
+              )}
+            </div>
+          </details>
+
+          <VersionsTable
+            versions={versions}
+            busy={busy}
+            mayPublish={mayPublish}
+            onPublish={(version) => void publishExisting(version)}
+          />
+        </div>
       </TabsContent>
 
       {/* TAB: PREVIEW — renderiza o draft real (temas/viewport/simulação chegam no K4) */}

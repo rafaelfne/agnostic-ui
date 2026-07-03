@@ -2,11 +2,14 @@ import type { TemplateNode } from '@yukilabs/agnostic-ui-core';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildPathIndex,
   childrenOf,
   getNodeAt,
   insertNodeAt,
   isAncestorPath,
   moveNode,
+  parsePath,
+  pathToString,
   removeNodeAt,
   updateNodeAt,
 } from './nodePath';
@@ -100,5 +103,31 @@ describe('K1 — nodePath (operações imutáveis na árvore)', () => {
     expect(isAncestorPath([0], [0, 1])).toBe(true);
     expect(isAncestorPath([0, 1], [0, 1])).toBe(true);
     expect(isAncestorPath([1], [0, 1])).toBe(false);
+  });
+
+  it('parsePath/pathToString: raiz e aninhado', () => {
+    expect(parsePath('')).toEqual([]);
+    expect(parsePath('0.1.2')).toEqual([0, 1, 2]);
+    expect(pathToString([])).toBe('');
+    expect(pathToString([0, 1, 2])).toBe('0.1.2');
+  });
+
+  it('buildPathIndex mapeia cada nó ao seu path POR REFERÊNCIA', () => {
+    const root = tree();
+    const index = buildPathIndex(root);
+    expect(index.get(root)).toBe('');
+    expect(index.get(getNodeAt(root, [0])!)).toBe('0');
+    expect(index.get(getNodeAt(root, [0, 1])!)).toBe('0.1');
+    expect(index.get(getNodeAt(root, [1, 0])!)).toBe('1.0');
+    // um nó de outra árvore não está no índice
+    expect(index.get({ type: 'text' })).toBeUndefined();
+  });
+
+  it('após moveNode, buildPathIndex localiza o nó movido no path final (base do reselect)', () => {
+    const root = tree();
+    const moved = getNodeAt(root, [0]); // section
+    // moveNode reinsere a MESMA referência; buildPathIndex dá o path ajustado (índice 1)
+    const next = moveNode(root, [0], [], 2);
+    expect(buildPathIndex(next).get(moved!)).toBe('1');
   });
 });
