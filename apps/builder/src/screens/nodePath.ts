@@ -9,6 +9,30 @@ import type { TemplateNode } from '@yukilabs/agnostic-ui-core';
  */
 export type NodePath = number[];
 
+/** Path serializado (`''` = raiz, `'0.1.2'`) — usado no DnD (`dataTransfer` é string). */
+export function pathToString(path: NodePath): string {
+  return path.join('.');
+}
+export function parsePath(path: string): NodePath {
+  return path === '' ? [] : path.split('.').map(Number);
+}
+
+/**
+ * Índice `nó → path` por REFERÊNCIA (K2): o renderer repassa a MESMA referência do nó
+ * ao componente ([renderer.tsx](../../../packages/react/src/renderer.tsx) — `createElement(Component,{node,…})`),
+ * então o wrapper do canvas recupera o path com `pathIndex.get(node)` sem poluir a
+ * árvore. Recomputado a cada mudança do draft (árvores pequenas → custo irrelevante).
+ */
+export function buildPathIndex(root: TemplateNode): WeakMap<TemplateNode, string> {
+  const index = new WeakMap<TemplateNode, string>();
+  const walk = (node: TemplateNode, path: string): void => {
+    index.set(node, path);
+    childrenOf(node).forEach((child, i) => walk(child, path === '' ? String(i) : `${path}.${i}`));
+  };
+  walk(root, '');
+  return index;
+}
+
 /** Filhos de um nó — o renderer aceita `children` OU `body`. */
 export function childrenOf(node: TemplateNode): TemplateNode[] {
   return node.children ?? node.body ?? [];
