@@ -2,10 +2,35 @@
   "$comment": "AUTO-GERADO por scripts/gen-conformance-spec.mjs — não editar à mão. Rode `pnpm --filter @yukilabs/agnostic-ui-core gen:conformance`.",
   "specVersion": "1.0",
   "counts": {
-    "operator": 4,
-    "template": 11
+    "template": 17,
+    "operator": 4
   },
   "vectors": [
+    {
+      "kind": "template",
+      "name": "badge-status",
+      "description": "badge (K3): texto ligado; variant literal.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "badge",
+        "props": {
+          "text": "{{ order.status }}",
+          "variant": "success"
+        }
+      },
+      "context": {
+        "order": {
+          "status": "aprovado"
+        }
+      },
+      "expected": {
+        "type": "badge",
+        "props": {
+          "text": "aprovado",
+          "variant": "success"
+        }
+      }
+    },
     {
       "kind": "operator",
       "name": "call-integration",
@@ -48,6 +73,46 @@
           "label": "Saldo",
           "amount": "1.234,50"
         }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "card-title",
+      "description": "card (K3): binding no título + filho resolvido.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "card",
+        "props": {
+          "title": "{{ account.name }}"
+        },
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "{{ account.subtitle }}"
+            }
+          }
+        ]
+      },
+      "context": {
+        "account": {
+          "name": "Conta corrente",
+          "subtitle": "Ag 0001 · C/C 12345-6"
+        }
+      },
+      "expected": {
+        "type": "card",
+        "props": {
+          "title": "Conta corrente"
+        },
+        "children": [
+          {
+            "type": "text",
+            "props": {
+              "text": "Ag 0001 · C/C 12345-6"
+            }
+          }
+        ]
       }
     },
     {
@@ -141,6 +206,29 @@
     },
     {
       "kind": "template",
+      "name": "divider-label",
+      "description": "divider (K3): label central ligado.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "divider",
+        "props": {
+          "label": "{{ group.day }}"
+        }
+      },
+      "context": {
+        "group": {
+          "day": "12 jun"
+        }
+      },
+      "expected": {
+        "type": "divider",
+        "props": {
+          "label": "12 jun"
+        }
+      }
+    },
+    {
+      "kind": "template",
       "name": "empty-state",
       "description": "Binding nas props de um componente especializado (empty-state).",
       "specVersion": "1.0",
@@ -213,6 +301,118 @@
         "props": {
           "value": "Olá, Ada!"
         }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "kpi-balance",
+      "description": "kpi (K3): value + delta ligados; trend literal.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "kpi",
+        "props": {
+          "label": "Saldo",
+          "value": "{{ balance.value }}",
+          "delta": "{{ balance.delta }}",
+          "trend": "up"
+        }
+      },
+      "context": {
+        "balance": {
+          "value": "12.480,55",
+          "delta": "+3,1%"
+        }
+      },
+      "expected": {
+        "type": "kpi",
+        "props": {
+          "label": "Saldo",
+          "value": "12.480,55",
+          "delta": "+3,1%",
+          "trend": "up"
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "list-item-row",
+      "description": "list-item (K3): label + value ligados; muted literal.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "list-item",
+        "props": {
+          "label": "{{ item.label }}",
+          "value": "{{ item.value }}",
+          "muted": false
+        }
+      },
+      "context": {
+        "item": {
+          "label": "Energia",
+          "value": "-R$ 240,10"
+        }
+      },
+      "expected": {
+        "type": "list-item",
+        "props": {
+          "label": "Energia",
+          "value": "-R$ 240,10",
+          "muted": false
+        }
+      }
+    },
+    {
+      "kind": "template",
+      "name": "list-transactions",
+      "description": "list + list-item (K3): container com itens ligados.",
+      "specVersion": "1.0",
+      "template": {
+        "type": "list",
+        "children": [
+          {
+            "type": "list-item",
+            "props": {
+              "label": "{{ a.label }}",
+              "value": "{{ a.value }}"
+            }
+          },
+          {
+            "type": "list-item",
+            "props": {
+              "label": "{{ b.label }}",
+              "value": "{{ b.value }}"
+            }
+          }
+        ]
+      },
+      "context": {
+        "a": {
+          "label": "Mercado",
+          "value": "-R$ 182,90"
+        },
+        "b": {
+          "label": "Salário",
+          "value": "+R$ 8.200,00"
+        }
+      },
+      "expected": {
+        "type": "list",
+        "children": [
+          {
+            "type": "list-item",
+            "props": {
+              "label": "Mercado",
+              "value": "-R$ 182,90"
+            }
+          },
+          {
+            "type": "list-item",
+            "props": {
+              "label": "Salário",
+              "value": "+R$ 8.200,00"
+            }
+          }
+        ]
       }
     },
     {

@@ -1,0 +1,17 @@
+{
+  "kind": "template",
+  "name": "card-title",
+  "specVersion": "1.0",
+  "description": "card (K3): binding no título + filho resolvido.",
+  "template": {
+    "type": "card",
+    "props": { "title": "{{ account.name }}" },
+    "children": [{ "type": "text", "props": { "text": "{{ account.subtitle }}" } }]
+  },
+  "context": { "account": { "name": "Conta corrente", "subtitle": "Ag 0001 · C/C 12345-6" } },
+  "expected": {
+    "type": "card",
+    "props": { "title": "Conta corrente" },
+    "children": [{ "type": "text", "props": { "text": "Ag 0001 · C/C 12345-6" } }]
+  }
+}

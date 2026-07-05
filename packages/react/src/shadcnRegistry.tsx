@@ -202,6 +202,21 @@ function ChartNode({ props }: { props: Record<string, unknown> }): ReactNode {
   );
 }
 
+/** `kpi.trend` → cor da pílula de variação (K3). */
+function trendClass(trend: unknown): string {
+  if (trend === 'up') return 'bg-green-50 text-green-700';
+  if (trend === 'down') return 'bg-red-50 text-red-700';
+  return 'bg-muted text-muted-foreground';
+}
+
+/** `badge.variant` → cores da pílula (K3). */
+function badgeVariantClass(variant: unknown): string {
+  if (variant === 'success') return 'border-green-200 bg-green-50 text-green-700';
+  if (variant === 'warning') return 'border-amber-200 bg-amber-50 text-amber-700';
+  if (variant === 'destructive') return 'border-red-200 bg-red-50 text-red-700';
+  return 'border-transparent bg-muted text-muted-foreground';
+}
+
 /** The known component map. Every entry returns shadcn/Recharts markup. */
 const components: ComponentRegistry = {
   screen: ({ children }) => (
@@ -247,6 +262,69 @@ const components: ComponentRegistry = {
     </div>
   ),
   chart: ({ props }) => <ChartNode props={props} />,
+  card: ({ props, children }) => (
+    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm">
+      {props.title !== undefined && (
+        <h3 className="mb-3 text-sm font-semibold tracking-tight">{text(props.title)}</h3>
+      )}
+      {children}
+    </div>
+  ),
+  kpi: ({ props }) => (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {text(props.label)}
+      </span>
+      <div className="flex items-end gap-2">
+        <span className="text-3xl font-semibold tabular-nums tracking-tight">
+          {text(props.value)}
+        </span>
+        {props.delta !== undefined && (
+          <span
+            className={cx(
+              'mb-1 rounded-full px-1.5 py-0.5 text-xs font-medium',
+              trendClass(props.trend),
+            )}
+          >
+            {text(props.delta)}
+          </span>
+        )}
+      </div>
+    </div>
+  ),
+  badge: ({ props }) => (
+    <span
+      className={cx(
+        'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
+        badgeVariantClass(props.variant),
+      )}
+    >
+      {text(props.text ?? props.label)}
+    </span>
+  ),
+  divider: ({ props }) =>
+    props.label !== undefined ? (
+      <div className="flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {text(props.label)}
+        </span>
+        <span className="h-px flex-1 bg-border" />
+      </div>
+    ) : (
+      <hr className="border-border" />
+    ),
+  list: ({ children }) => <div className="flex flex-col divide-y divide-border">{children}</div>,
+  'list-item': ({ props }) => (
+    <div className="flex items-center justify-between py-2.5">
+      <span className={cx('text-sm', props.muted ? 'text-muted-foreground' : 'text-foreground')}>
+        {text(props.label)}
+      </span>
+      {props.value !== undefined && (
+        <span className="text-sm font-medium tabular-nums">{text(props.value)}</span>
+      )}
+    </div>
+  ),
 };
 
 /** Component returned for any unmapped `type` — throws instead of degrading. */

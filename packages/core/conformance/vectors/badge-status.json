@@ -1,0 +1,15 @@
+{
+  "kind": "template",
+  "name": "badge-status",
+  "specVersion": "1.0",
+  "description": "badge (K3): texto ligado; variant literal.",
+  "template": {
+    "type": "badge",
+    "props": { "text": "{{ order.status }}", "variant": "success" }
+  },
+  "context": { "order": { "status": "aprovado" } },
+  "expected": {
+    "type": "badge",
+    "props": { "text": "aprovado", "variant": "success" }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "template",
+  "name": "list-item-row",
+  "specVersion": "1.0",
+  "description": "list-item (K3): label + value ligados; muted literal.",
+  "template": {
+    "type": "list-item",
+    "props": { "label": "{{ item.label }}", "value": "{{ item.value }}", "muted": false }
+  },
+  "context": { "item": { "label": "Energia", "value": "-R$ 240,10" } },
+  "expected": {
+    "type": "list-item",
+    "props": { "label": "Energia", "value": "-R$ 240,10", "muted": false }
+  }
+}
