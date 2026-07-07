@@ -1,9 +1,17 @@
 import type { TemplateNode } from '@yukilabs/agnostic-ui-core';
-import { SduiRenderer, shadcnRegistry } from '@yukilabs/agnostic-ui-react';
 import { type ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { AlertCircle, ArrowLeft, CheckCircle2, LayoutList, Play, Rocket, Save } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  LayoutList,
+  Play,
+  Rocket,
+  Save,
+} from 'lucide-react';
 
 import { BuilderApiError } from '../api/client';
 import type { ArtifactSummary, ArtifactVersion } from '../api/types';
@@ -46,6 +54,8 @@ import {
 } from './nodePath';
 import { type ScreenDraft, emptyScreen, validateScreen } from './screenModel';
 import { CONTAINER_TYPES, emptyNode } from './screenVocabulary';
+import { ScreenPreviewPanel } from '../preview/ScreenPreviewPanel';
+import { SimulatePanel } from '../preview/SimulatePanel';
 
 function describeError(caught: unknown): string {
   if (caught instanceof BuilderApiError) {
@@ -330,7 +340,10 @@ export function ScreenEditorPage(): ReactElement {
             <LayoutList /> {t('editor.tabDesign')}
           </TabsTrigger>
           <TabsTrigger value="preview">
-            <Play /> {t('editor.tabPreview')}
+            <Eye /> {t('editor.tabPreview')}
+          </TabsTrigger>
+          <TabsTrigger value="simulate">
+            <Play /> {t('editor.tabSimulate')}
           </TabsTrigger>
         </TabsList>
 
@@ -463,18 +476,14 @@ export function ScreenEditorPage(): ReactElement {
         </div>
       </TabsContent>
 
-      {/* TAB: PREVIEW — renderiza o draft real (temas/viewport/simulação chegam no K4) */}
-      <TabsContent value="preview" className="mx-auto w-full max-w-[1180px] px-8 pb-14 pt-6">
-        <Card className="flex justify-center p-8">
-          <div className="w-[375px] overflow-hidden rounded-2xl border bg-background shadow-sm">
-            <div className="border-b bg-muted/40 px-4 py-2 text-center font-mono text-[10px] text-muted-foreground">
-              {draft.route} · 375px
-            </div>
-            <div className="p-4">
-              <SduiRenderer node={draft.root as TemplateNode} registry={shadcnRegistry} />
-            </div>
-          </div>
-        </Card>
+      {/* TAB: PREVIEW — tema do tenant + viewport + dados de amostra (K4) */}
+      <TabsContent value="preview" className="mx-auto w-full max-w-[1180px] px-6 pb-14 pt-6">
+        <ScreenPreviewPanel root={draft.root as TemplateNode} />
+      </TabsContent>
+
+      {/* TAB: SIMULATE — roda o dataFlow com mock runner (K4) */}
+      <TabsContent value="simulate" className="mx-auto w-full max-w-[1180px] px-6 pb-14 pt-6">
+        <SimulatePanel dataFlow={draft.dataFlow ?? slug} root={draft.root as TemplateNode} />
       </TabsContent>
     </Tabs>
   );
