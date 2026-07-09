@@ -30,7 +30,8 @@ import { useI18n } from '@/i18n/i18n';
 
 import { FlowCanvasPlaceholder } from './FlowCanvasPlaceholder';
 import { PreviewPane } from './PreviewPane';
-import { ProposePanel } from './ProposePanel';
+import { ProposePanel } from '@/components/ProposePanel';
+import { FlowIntentReview } from './FlowIntentReview';
 import { StepEditor, StepPipelineItem } from './StepEditor';
 import { type FlowDraft, type StepOp, emptyFlow, emptyStep, validateFlow } from './flowModel';
 
@@ -253,12 +254,17 @@ export function FlowEditorPage(): ReactElement {
       <TabsContent value="editor" className="mx-auto w-full max-w-[1180px] px-8 pb-14 pt-6">
         <div className="mb-4">
           <ProposePanel
+            kind="flow"
             slug={slug}
-            publishedFlow={(latestPublished?.body as FlowDraft | undefined) ?? null}
+            published={latestPublished?.body ?? null}
             onProposed={async (_version, body) => {
-              setDraft(body);
+              setDraft(body as FlowDraft);
               await refreshVersions();
             }}
+            renderReview={(body, published) => (
+              <FlowIntentReview flow={body} published={published} />
+            )}
+            placeholder="ex.: busque o saldo e mostre num card"
           />
         </div>
         <div className="mb-4 grid gap-3.5 lg:grid-cols-2">
