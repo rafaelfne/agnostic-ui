@@ -56,6 +56,8 @@ import { type ScreenDraft, emptyScreen, validateScreen } from './screenModel';
 import { CONTAINER_TYPES, emptyNode } from './screenVocabulary';
 import { ScreenPreviewPanel } from '../preview/ScreenPreviewPanel';
 import { SimulatePanel } from '../preview/SimulatePanel';
+import { ProposePanel } from '@/components/ProposePanel';
+import { ScreenIntentReview } from './ScreenIntentReview';
 
 function describeError(caught: unknown): string {
   if (caught instanceof BuilderApiError) {
@@ -239,13 +241,16 @@ export function ScreenEditorPage(): ReactElement {
   const latestPublished = versions.find((v) => v.status === 'published');
   const update = (changes: Partial<ScreenDraft>): void => setDraft({ ...draft, ...changes });
 
-  /** Aplica um root novo vindo de fora do textarea (ex.: proposta da IA no K5). */
-  const applyRoot = (root: ScreenDraft['root']): void => {
-    update({ root });
-    setRootText(JSON.stringify(root, null, 2));
+  /** Carrega uma tela proposta pela IA (K5) inteira no editor: draft + JSON de escape,
+   *  limpa a seleção e refresca as versões (o rascunho já existe no store). */
+  const loadProposedScreen = async (body: unknown): Promise<void> => {
+    const screen = body as ScreenDraft;
+    setDraft(screen);
+    setRootText(JSON.stringify(screen.root ?? {}, null, 2));
     setRootError(null);
+    setSelectedPath(null);
+    await refreshVersions();
   };
-  void applyRoot; // usado pelo canvas (K2) e pela IA (K5)
 
   const onRootText = (raw: string): void => {
     setRootText(raw);
@@ -418,6 +423,18 @@ export function ScreenEditorPage(): ReactElement {
             </span>
           )}
         </div>
+
+        {/* IA: propor a tela em linguagem natural (K5) — carrega o rascunho no canvas */}
+        <ProposePanel
+          kind="screen"
+          slug={slug}
+          published={latestPublished?.body ?? null}
+          onProposed={(_version, body) => loadProposedScreen(body)}
+          renderReview={(body, published) => (
+            <ScreenIntentReview screen={body} published={published} />
+          )}
+          placeholder="ex.: tela de saldo com um KPI e a lista de transações"
+        />
 
         {/* editor de 3 colunas */}
         <div className="grid h-[640px] grid-cols-[15rem_1fr_20rem] overflow-hidden rounded-xl border bg-card">
