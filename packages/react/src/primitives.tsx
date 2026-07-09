@@ -19,4 +19,27 @@ export const defaultRegistry: ComponentRegistry = {
   ),
   button: ({ props }) => <button type="button">{text(props.label ?? props.text)}</button>,
   image: ({ props }) => <img src={str(props.src)} alt={text(props.alt)} />,
+  card: ({ props, children }) => (
+    <div data-sdui="card">
+      {props.title !== undefined && <h3>{text(props.title)}</h3>}
+      {children}
+    </div>
+  ),
+  kpi: ({ props }) => (
+    <div data-sdui="kpi">
+      <span>{text(props.label)}</span>
+      <strong>{text(props.value)}</strong>
+      {props.delta !== undefined && <span>{text(props.delta)}</span>}
+    </div>
+  ),
+  badge: ({ props }) => <span data-sdui="badge">{text(props.text ?? props.label)}</span>,
+  divider: ({ props }) =>
+    props.label !== undefined ? <div data-sdui="divider">{text(props.label)}</div> : <hr />,
+  list: ({ children }) => <div data-sdui="list">{children}</div>,
+  'list-item': ({ props }) => (
+    <div data-sdui="list-item">
+      <span>{text(props.label)}</span>
+      {props.value !== undefined && <span>{text(props.value)}</span>}
+    </div>
+  ),
 };

@@ -55,6 +55,12 @@ const REGISTRY_ROWS: { type: string; maps: string }[] = [
   { type: 'button', maps: 'Button (variant via props)' },
   { type: 'image', maps: 'AspectRatio + img' },
   { type: 'chart', maps: 'Recharts (line / bar / area / pie)' },
+  { type: 'card', maps: 'Card (title + children)' },
+  { type: 'kpi', maps: 'label + value tabular + delta pill (trend)' },
+  { type: 'badge', maps: 'pill (default / success / warning / destructive)' },
+  { type: 'divider', maps: 'hr / label central' },
+  { type: 'list', maps: 'flex column + divide-y' },
+  { type: 'list-item', maps: 'row: label ↔ value' },
 ];
 
 /**

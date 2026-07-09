@@ -1,0 +1,24 @@
+{
+  "kind": "template",
+  "name": "list-transactions",
+  "specVersion": "1.0",
+  "description": "list + list-item (K3): container com itens ligados.",
+  "template": {
+    "type": "list",
+    "children": [
+      { "type": "list-item", "props": { "label": "{{ a.label }}", "value": "{{ a.value }}" } },
+      { "type": "list-item", "props": { "label": "{{ b.label }}", "value": "{{ b.value }}" } }
+    ]
+  },
+  "context": {
+    "a": { "label": "Mercado", "value": "-R$ 182,90" },
+    "b": { "label": "Salário", "value": "+R$ 8.200,00" }
+  },
+  "expected": {
+    "type": "list",
+    "children": [
+      { "type": "list-item", "props": { "label": "Mercado", "value": "-R$ 182,90" } },
+      { "type": "list-item", "props": { "label": "Salário", "value": "+R$ 8.200,00" } }
+    ]
+  }
+}
