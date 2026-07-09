@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "gen:design-cards": "node scripts/gen-design-cards.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.4",
