@@ -13,6 +13,8 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, './src') },
   },
   server: {
-    proxy: { '/api': 'http://localhost:3000' },
+    // Alvo do proxy /api → BFF. Default :3000 (dev padrão); override via
+    // VITE_PROXY_TARGET p/ o E2E apontar num BFF dedicado sem colidir com o dev.
+    proxy: { '/api': process.env.VITE_PROXY_TARGET ?? 'http://localhost:3000' },
   },
 });
