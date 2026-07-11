@@ -1,0 +1,20 @@
+{
+  "kind": "template",
+  "name": "kpi-balance",
+  "specVersion": "1.0",
+  "description": "kpi (K3): value + delta ligados; trend literal.",
+  "template": {
+    "type": "kpi",
+    "props": {
+      "label": "Saldo",
+      "value": "{{ balance.value }}",
+      "delta": "{{ balance.delta }}",
+      "trend": "up"
+    }
+  },
+  "context": { "balance": { "value": "12.480,55", "delta": "+3,1%" } },
+  "expected": {
+    "type": "kpi",
+    "props": { "label": "Saldo", "value": "12.480,55", "delta": "+3,1%", "trend": "up" }
+  }
+}

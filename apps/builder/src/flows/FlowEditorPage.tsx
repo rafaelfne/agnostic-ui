@@ -3,16 +3,7 @@ import { type ReactElement, useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  History,
-  LayoutList,
-  Play,
-  Rocket,
-  Save,
-  Workflow,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle2, LayoutList, Play, Rocket, Save, Workflow } from 'lucide-react';
 
 import { BuilderApiError } from '../api/client';
 import type { ArtifactVersion } from '../api/types';
@@ -20,6 +11,7 @@ import { useBuilderClient } from '../api/useBuilderClient';
 import { useAuth } from '../auth/AuthContext';
 import { canPublish } from '../auth/roles';
 import { StringListInput } from '@/components/StringListInput';
+import { VersionsTable } from '@/components/VersionsTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -33,20 +25,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useI18n } from '@/i18n/i18n';
 
 import { FlowCanvasPlaceholder } from './FlowCanvasPlaceholder';
 import { PreviewPane } from './PreviewPane';
-import { ProposePanel } from './ProposePanel';
+import { ProposePanel } from '@/components/ProposePanel';
+import { FlowIntentReview } from './FlowIntentReview';
 import { StepEditor, StepPipelineItem } from './StepEditor';
 import { type FlowDraft, type StepOp, emptyFlow, emptyStep, validateFlow } from './flowModel';
 
@@ -269,12 +254,17 @@ export function FlowEditorPage(): ReactElement {
       <TabsContent value="editor" className="mx-auto w-full max-w-[1180px] px-8 pb-14 pt-6">
         <div className="mb-4">
           <ProposePanel
+            kind="flow"
             slug={slug}
-            publishedFlow={(latestPublished?.body as FlowDraft | undefined) ?? null}
+            published={latestPublished?.body ?? null}
             onProposed={async (_version, body) => {
-              setDraft(body);
+              setDraft(body as FlowDraft);
               await refreshVersions();
             }}
+            renderReview={(body, published) => (
+              <FlowIntentReview flow={body} published={published} />
+            )}
+            placeholder="ex.: busque o saldo e mostre num card"
           />
         </div>
         <div className="mb-4 grid gap-3.5 lg:grid-cols-2">
@@ -515,51 +505,12 @@ export function FlowEditorPage(): ReactElement {
         </div>
 
         {/* version history */}
-        <Card className="overflow-hidden">
-          <div className="flex items-center gap-2.5 border-b px-4 py-3.5">
-            <History className="size-4 text-muted-foreground" />
-            <h3 className="text-sm font-semibold">{t('editor.versions')}</h3>
-          </div>
-          {versions.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">—</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('col.version')}</TableHead>
-                  <TableHead>{t('col.status')}</TableHead>
-                  <TableHead>{t('col.created')}</TableHead>
-                  <TableHead className="text-right">{t('col.actions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {versions.map((v) => (
-                  <TableRow key={v.version}>
-                    <TableCell className="font-mono font-semibold">v{v.version}</TableCell>
-                    <TableCell>
-                      <Badge variant={v.status === 'published' ? 'success' : 'warning'}>
-                        {v.status === 'published' ? t('status.published') : t('status.draft')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{v.createdAt}</TableCell>
-                    <TableCell className="text-right">
-                      {v.status !== 'published' && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          disabled={busy || !mayPublish}
-                          onClick={() => void publishExisting(v.version)}
-                        >
-                          {t('editor.publishThis')}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </Card>
+        <VersionsTable
+          versions={versions}
+          busy={busy}
+          mayPublish={mayPublish}
+          onPublish={(version) => void publishExisting(version)}
+        />
       </TabsContent>
 
       {/* TAB: CANVAS (React Flow placeholder) */}

@@ -1,0 +1,15 @@
+{
+  "kind": "template",
+  "name": "divider-label",
+  "specVersion": "1.0",
+  "description": "divider (K3): label central ligado.",
+  "template": {
+    "type": "divider",
+    "props": { "label": "{{ group.day }}" }
+  },
+  "context": { "group": { "day": "12 jun" } },
+  "expected": {
+    "type": "divider",
+    "props": { "label": "12 jun" }
+  }
+}

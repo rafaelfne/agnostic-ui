@@ -1,0 +1,14 @@
+{
+  "name": "@yukilabs/agnostic-ui-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "E2E da plataforma (Playwright): builder SPA + BFF runtime/builder-API + Supabase local.",
+  "scripts": {
+    "e2e": "playwright test",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.50.0"
+  }
+}

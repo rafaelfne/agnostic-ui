@@ -4,6 +4,7 @@ dist
 .turbo
 coverage
 *.tsbuildinfo
+design-cards
 .DS_Store
 .env*
 !.env.example
