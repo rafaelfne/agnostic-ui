@@ -361,8 +361,10 @@ pnpm release                  # build + changeset publish
 
 > **Ambiente local:** `pnpm setup:local` (ADR 0003) precisa de Docker + CLI do
 > Supabase; sobe o stack em portas `554xx`, aplica `packages/next/drizzle/*.sql` e
-> seeda o flow `get-balance` no config store. Gera `packages/next/.env.local`
-> (gitignored); `.env.example` documenta o shape.
+> seeda flows/telas/integrações + os usuários no config store. Gera
+> `packages/next/.env.local` (gitignored); `.env.example` documenta o shape.
+> **Passo a passo completo (rodar apps, login, IA, E2E, troubleshooting):**
+> [`docs/runbook-local.md`](docs/runbook-local.md).
 
 ## Glossário
 
